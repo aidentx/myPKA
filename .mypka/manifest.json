@@ -2,8 +2,8 @@
   "schema": 2,
   "name": "myPKA",
   "version": "6.0.3",
-  "built": "2026-09-26T16:38:10Z",
-  "commit": "e87216d",
+  "built": "2026-10-01T15:04:56Z",
+  "commit": "fc008a6",
   "lab": false,
   "requires": "icor-concepts >=1 <2",
   "files": {
@@ -91,13 +91,13 @@
     "06 AI Team/AI Team Knowledge/SOPs/SOP-1016-run-the-red-tests-and-gate-a-release.md": "aa96cd9f4abb3bcb5f5e78b37e92bcd7bcbaf8dfb4e07a94e6f3860a79dd4ee5",
     "06 AI Team/AI Team Knowledge/SOPs/SOP-1017-answer-the-six-life-questions-from-the-snapshot.md": "b0eaf01fc5cc1b7f14eb32a1bac9d06941c1d25d350bcdc93a2776fbe0a8a504",
     "06 AI Team/AI Team Knowledge/Scripts/LICENSE-myPKA": "170333a76ed584f3892d02c7b83cb68d8602cb29d09fdbbbe380cee7f6eecf5b",
-    "06 AI Team/AI Team Knowledge/Scripts/README-myPKA.md": "4b283b17e8ce470e171cc3ff845a758c3393a8cf4399f0422b66e7678aec2c3f",
+    "06 AI Team/AI Team Knowledge/Scripts/README-myPKA.md": "46fa6eaaeac2b740f6f9d61e98ed3f529b6366f7f851a083e8af3dd5fdb33717",
     "06 AI Team/AI Team Knowledge/Scripts/add-mcp-server.py": "409c8e5520f16930162fbab96f2b62ac8221fa19dd7db49e344c94a83d1277b2",
     "06 AI Team/AI Team Knowledge/Scripts/check-agent-shim-mcp.py": "edcbf20fc4bce16924a209515e5ff74da44908b2346bf15c2925f24f8dbc5fa9",
     "06 AI Team/AI Team Knowledge/Scripts/check-hire.py": "3d481ebaf1998171a641a0cff8af87283c4dd2ec148b351ad55af70610cf7546",
     "06 AI Team/AI Team Knowledge/Scripts/check-icor-concepts.py": "e95ef2381c0f7f6d4f6b7a38fc101a7880d023f42e131f2c9026280e28bebc3c",
     "06 AI Team/AI Team Knowledge/Scripts/check-onboarding.py": "92d8fb48bdf3ea09fc36dbe7c11a5f96961e0eaf745c2f1b3dc76992359df432",
-    "06 AI Team/AI Team Knowledge/Scripts/checkpoint.py": "c0922e350e3dafff82794e547fdc876c4265328dbb13271381f60726f0120d3c",
+    "06 AI Team/AI Team Knowledge/Scripts/checkpoint.py": "f16043598d1bd97c0d1aafdf41c95a411e7f5af6bb8459068bf221bda1936f6c",
     "06 AI Team/AI Team Knowledge/Scripts/expansion-pack.py": "3110554db03826067f49db77066fe52806d6c8b4fec3cc15069f872a470c0302",
     "06 AI Team/AI Team Knowledge/Scripts/hooks-rules.json": "60cb9e2795acee9d6609348eff3e3dcf86abe69595a6c49c00f0b5cfd64dea1b",
     "06 AI Team/AI Team Knowledge/Scripts/import-file.py": "85c3230510a6fe04a39fbe39895cc1e76a7d06af16628ecadb57937148f55365",
@@ -110,9 +110,9 @@
     "06 AI Team/AI Team Knowledge/Scripts/new-task.py": "df25b25f4f7e6d597343b8332d016e4550bcb733a667a51cac3d05d14a77f5bd",
     "06 AI Team/AI Team Knowledge/Scripts/noteio.py": "8adf62965c7a646d9e567eaed2d809164796c75f81c6cb6626a8fbf0e3bd7f22",
     "06 AI Team/AI Team Knowledge/Scripts/resolve.py": "353f622b2e22ee49dd3f0ec4454db6e87ae72a56094611646644d4ebc70454ef",
-    "06 AI Team/AI Team Knowledge/Scripts/run-red-tests.py": "5353460b6a3916864f6732490146b1c2fb144c96550a8125a0db3e2066d6e85d",
+    "06 AI Team/AI Team Knowledge/Scripts/run-red-tests.py": "face82049c9f0f017fcb25fa9000f2998588bc530190aa93805a3e3bad765628",
     "06 AI Team/AI Team Knowledge/Scripts/scaffold-init.py": "c9aef875c3ffb43b24540cd44751d9e896bd08dfc6f83350e549fbc0a52afb98",
-    "06 AI Team/AI Team Knowledge/Scripts/session-start.py": "345d3ed46d8c60251703be2937a27e63bb49a2d90e438de784ba6d0a90f9c981",
+    "06 AI Team/AI Team Knowledge/Scripts/session-start.py": "d79d36d998bd6817e9499d194fe51d9ff3ebe53af955b7e55e15ab637a0fa946",
     "06 AI Team/AI Team Knowledge/Scripts/skill-doctor.py": "fc1dca2fbf6709340c5da18154052ec63c847e4e54be9560e60916dd5d376c15",
     "06 AI Team/AI Team Knowledge/Scripts/test-expansion-pack.py": "7ba4960fafa19910e669c1a5c1f75bc0ef60058095e9074ad90df3a18fe254c1",
     "06 AI Team/AI Team Knowledge/Scripts/validate-team.py": "fdb93f36c64de42fa0b0f44cfc5457b1963cc4e134ba8fa15d232f17a242bfbd",
@@ -131,7 +131,7 @@
     "06 AI Team/AI Team Knowledge/Tasks/open/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "06 AI Team/AI Team Knowledge/Workstreams/WS-1003-onboarding-first-launch.md": "a05dd623e429ab853e5e663e5d8509bd86918924b270eb4c8d402a6d072c1da3",
     "06 AI Team/AI Team Knowledge/Workstreams/WS-1004-import-and-convert-external-knowledge.md": "74d9c375a59c67f92ac3f77ffae3ff2630903a592824008d0358e601d7a08a2b",
-    "06 AI Team/AI Team Knowledge/Workstreams/WS-1005-checkpoint.md": "2117fc910f5ab1e6fdcddfc3260e7b5451ceadc3646a5a9932fef8ab6148eb05",
+    "06 AI Team/AI Team Knowledge/Workstreams/WS-1005-checkpoint.md": "4742c4a3ff3c7b4e27774bb68bc87581f487a4c320fdd22f823bfd4d955a693c",
     "06 AI Team/AI Team Knowledge/Workstreams/WS-1006-install-an-ai-team-expansion.md": "83e89a7f3aa679f854c0500941c7a4ab89941ab5bff02723978221011b913a84",
     "06 AI Team/Agents/Ada/AGENT.md": "0bf3009ea10c4b1d78cf9f0ac556ebece08668ae4be8cdc016e1807211f12ad2",
     "06 AI Team/Agents/Ada/Ada.md": "7e2af33ed6bd83fa82f2e033321e46643e5127503a61c07bac048397ed3208c2",
@@ -607,6 +607,7 @@
       "fb3872465b1589f36b445be41f100caa4674b5547baa8bdfce6fe3a206608543"
     ],
     "06 AI Team/AI Team Knowledge/Scripts/README-myPKA.md": [
+      "4b283b17e8ce470e171cc3ff845a758c3393a8cf4399f0422b66e7678aec2c3f",
       "a0b5bab6b125da155b65572fecd481bd38dda93221fe57a04c42edc150c7e0f9"
     ],
     "06 AI Team/AI Team Knowledge/Scripts/add-mcp-server.py": [
@@ -635,6 +636,7 @@
       "80c8ba2caec5bf56d528b6495c7ee225a537161b0cf3b1a92fd023810df655ce",
       "ae9063463c6c5674d2dd0f77e6f5bc1241b586697de46f93dfa93c74ccb33e0c",
       "b064ad3d5c48bfb7615653ad0e230817f1e03bba90701f60e09d9d5a7105aa1e",
+      "c0922e350e3dafff82794e547fdc876c4265328dbb13271381f60726f0120d3c",
       "c86d9e62a0755bc019d473e92d7313982a36042c68d0304ef99b27d818e9cc62"
     ],
     "06 AI Team/AI Team Knowledge/Scripts/expansion-pack.py": [
@@ -707,6 +709,7 @@
       "3361df5956f5ec21af6ca8f7d03def96ddc65da6b8b9e75196e8478af3b36e5e",
       "3dea2309950c354b63d2eede724ae9a5c4ea60c3e5145a79963ebb13a46a2a07",
       "4dc4347fee7b3cbe7ef34638c88122ebe8e562b612589c5150644a3f65e94e85",
+      "5353460b6a3916864f6732490146b1c2fb144c96550a8125a0db3e2066d6e85d",
       "5dd1fbc4b7899b7dc8edced49565c7ec3fefa93af73d98acff2269583ed89cfb",
       "62b2d53b07ebe6ff36e4fe085e0dbf95cae74444cc3292076f7e57314518bfb1",
       "6d470be23e71cef32067813c811243644dc618eaae4e051eba3174e21fe21477",
@@ -733,6 +736,7 @@
       "f0919f09cb59d219bec5910122772f6e1398d617b81c3f540f71ca7006d52bf8"
     ],
     "06 AI Team/AI Team Knowledge/Scripts/session-start.py": [
+      "345d3ed46d8c60251703be2937a27e63bb49a2d90e438de784ba6d0a90f9c981",
       "5c1cda4333a5c89de4f499d4a27882f9f73bc1fb3b8db64c0a28359172500fe3",
       "852e8bacc5f425cebe487fcee03baf03d51c56483ced3834d6ad1ca5220df5bc",
       "d8ff39dd0e920814d193d78ef17f74a314a758492e8f33bfc56cd1bdf9032d28",
@@ -783,6 +787,7 @@
       "8926278d6405bd5169b84c2e78c5ab0bcd22ae7e8b9778c52265b25796ce1868"
     ],
     "06 AI Team/AI Team Knowledge/Workstreams/WS-1005-checkpoint.md": [
+      "2117fc910f5ab1e6fdcddfc3260e7b5451ceadc3646a5a9932fef8ab6148eb05",
       "6c09dbbfb2543fec9ab82c93b57160bb0434a6dfac10a81169f54f2c9894ab7a",
       "7f40987fda44b39ed24cc9f699db7c691e6f1691b4ea72fd9bf591361cd3a582",
       "974b67e432c9b5798d3a12a57352699291319a62a50561d49afa85921f7f2e0c",

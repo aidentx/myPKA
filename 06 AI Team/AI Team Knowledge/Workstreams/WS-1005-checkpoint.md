@@ -3,7 +3,7 @@ type: workstream
 id: WS-1005
 title: Checkpoint (end a session on purpose)
 created: 2026-09-06
-owner: larry
+owner: aiden
 skill_name: checkpoint
 skill_summary: 'Ends a session on purpose: reads the checkpoint report, closes or carries every task the session touched, rules on each WiP folder with the user, links the dates the session wrote, writes the session log and asserts it exists before the session is allowed to be over.'
 skill_triggers:
@@ -48,7 +48,7 @@ whenever you stop for the day, and whenever a piece of work is done.
    ([[GL-1011-date-mentions-link-to-daily-notes|GL-1011]]). It runs before
    the log is written, so the log's own dates are linked too. Additive and
    idempotent; nothing to rule on.
-5. [SCRIPT] **Session log.** `Scripts/new-session-log.py --agent larry
+5. [SCRIPT] **Session log.** `Scripts/new-session-log.py --agent aiden
    --slug <what-happened>`, then fill it per
    [[SOP-1009-write-a-session-log-and-agent-journal|SOP-1009]]: what
    happened, decisions, open threads. Agents that learned something
@@ -57,12 +57,64 @@ whenever you stop for the day, and whenever a piece of work is done.
    --output "<the session log you just wrote>"` records what this session
    closed: the workflow, the session id, the outputs and their hashes, and
    anything knowingly left open (`--unresolved "..."`, repeatable).
-7. [SCRIPT] `Scripts/checkpoint.py --assert-logged --assert-dates-linked`
-   must exit 0. `--assert-logged` reads the receipt for THIS session, so a
-   log written this morning can no longer close a session that ran this
-   afternoon and wrote nothing. A checkpoint that ends without its own log
-   is not a checkpoint, and neither is one that leaves a date pointing at
-   nothing.
+
+   A receipt for an id that already exists is refused when the receipt on
+   disk is a DIFFERENT session's — the evidence is the session log that
+   receipt names, not the two sessions' `started` values, which are
+   identical whenever both hold one minted id. Re-writing your own receipt
+   (same log, after adding an output) still succeeds.
+
+   **Rebuilding a receipt a session lost.** If a receipt was overwritten or
+   deleted, rebuild it with the script, never by hand:
+   `--write-receipt --reconstruct --session-id <the id the lost receipt
+   used> --started <when that session really began> --finished <when it
+   really ended>` plus the same `--output`/`--unresolved` lists. It refuses
+   a missing `--started`, a `started` later than `finished`, and a prior
+   receipt that turns out to belong to a different session. No hand-edited
+   JSON.
+
+   **Before removing a receipt, ask what it pins:** `--removing <id>` exits
+   1 when a session log on disk is named only by that receipt. A minted id,
+   or an id absent from `session.json`, is NOT evidence that a receipt is a
+   phantom — on 2026-09-29 exactly that reasoning deleted a real session's
+   receipt. A `local-...` receipt whose outputs are a session log and a
+   journal entry belongs to a real session.
+7. [SCRIPT] `Scripts/checkpoint.py --assert-logged --assert-dates-linked
+   --assert-wikilinks` must exit 0. `--assert-logged` reads the receipt for
+   THIS session, so a log written this morning can no longer close a session
+   that ran this afternoon and wrote nothing. A checkpoint that ends without
+   its own log is not a checkpoint, and neither is one that leaves a date
+   pointing at nothing, nor one whose own files carry a link to a note that
+   exists in neither vault.
+
+   **The wikilink gate is scoped to this session's receipt `outputs`, never
+   the whole tree.** The team tree's standing links to content-side records
+   (`[[GL-1007-capture-and-where-things-go]]`, `[[WS-1001-daily-processing-run]]`)
+   resolve in the content vault — they are the mode-B cross-tree dependency,
+   not this session's debt — so a whole-tree verdict would fail every session
+   for a dependency it did not create. `--assert-wikilinks` therefore runs the
+   guard over the files the receipt declares, with the content root as a
+   second root, and fails only on a link that resolves in NEITHER vault. GL-1005:
+   a gate that cannot tell mine from pre-existing is a gate sessions learn to
+   ignore. It is fail-closed: a guard it cannot run, or a receipt it cannot
+   read, is a FAIL, never a pass.
+
+   **Minted session id.** When the host sent no session id, the start
+   ritual minted one (`local-...`) into `.mypka/state/session.json`, one
+   file every session in the vault shares. It prints it as `YOUR SESSION
+   ID is ...`. Pass that id on BOTH calls above: `--session-id <id>`.
+   `checkpoint.py` refuses a bare call on a minted id, because a second
+   session's start would have re-pointed the file and the bare call would
+   close the wrong session's receipt. Why:
+   [[2026-09-28-session-json-single-slot-concurrent-sessions]].
+
+   **A host that sends its own id needs no flag at all.** Both scripts read
+   a host variable first — `HERMES_SESSION_ID`, then `ICOR_SESSION_ID` —
+   before the slot, so on such a host the id is picked up on its own, the
+   receipt's window is derived from the id's own timestamp, and
+   `--session-id` is belt-and-braces rather than the mechanism. A host id
+   is unique per session, and the bare refusal above applies only where
+   nothing exports one and the slot holds a mint.
 
    On a runtime with no session start hook there is no session id, and the
    assert says so and names the lever. Use `--assert-logged-today` there,

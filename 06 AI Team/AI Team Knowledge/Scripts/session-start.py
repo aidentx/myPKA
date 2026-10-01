@@ -217,13 +217,29 @@ def _read_stdin_in_a_thread(budget):
 def record_session():
     """Write which session this is, for checkpoint.py to bind a receipt to.
 
-    The id comes from the host's hook payload when there is one. No
-    environment variable carries it (checked against Claude Code's hook
-    documentation, 2026-09-14), so a runtime that sends no payload gets a
-    minted id instead: still one id per session, just not the host's.
+    The id comes from a host environment variable when one is set, then the
+    host's hook payload, and only then a minted fallback: still one id per
+    session, just not the host's.
+
+    `HERMES_SESSION_ID` is FIRST because it is the name a live host actually
+    exports and nothing read it (measured 2026-09-30: populated on every Hermes
+    session while this script minted a fresh `local-...` and rewrote the one
+    shared slot instead). That made `session.json` last-writer-wins and every
+    bare checkpoint's window another session's start, and it left the correct
+    id depending on a session remembering to pass `--session-id` by hand — a
+    prose reminder where GL-1005 asks for a machine check. The host id is
+    parseable (`YYYYMMDD_HHMMSS_...`), so `checkpoint.py`'s existing
+    `started_from_id()` derives the real window from it with no extra state.
+
+    `ICOR_SESSION_ID` stays, and stays ahead of the hook payload, because it is
+    the name a host-neutral integration sets deliberately.
     """
-    sid = os.environ.get("ICOR_SESSION_ID") or ""
-    source = "ICOR_SESSION_ID"
+    sid = ""
+    source = ""
+    for var in ("HERMES_SESSION_ID", "ICOR_SESSION_ID"):
+        if os.environ.get(var):
+            sid, source = os.environ[var], var
+            break
     if not sid and not sys.stdin.isatty():
         text = _read_stdin_payload()
         if text:
@@ -588,6 +604,15 @@ def main():
     # BECAUSE no hook payload arrived. That fact was sitting in session.json
     # and nothing told anyone to read it as a trust signal. Now it is a line.
     if _no_host_session_id(sid):
+        # The host gave this session no id, so the one in session.json was
+        # minted into a slot every session in the vault shares. checkpoint.py
+        # refuses a bare call on it, so hand the session its id here, where it
+        # is read once, and say what to do with it.
+        lines.append("  YOUR SESSION ID is %s. Keep it: pass `--session-id %s` on "
+                     "every checkpoint.py call (--write-receipt, --assert-logged). "
+                     "session.json is shared by every session in this vault and "
+                     "the next session start overwrites it; checkpoint.py refuses "
+                     "a bare call on a minted id." % (sid, sid))
         lines.append("  GUARDS: no host session id received, so this ritual was "
                      "run by hand and not by a hook. On Codex that means the "
                      "project hooks are UNTRUSTED and every guard is OFF for "

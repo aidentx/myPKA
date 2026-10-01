@@ -24,13 +24,13 @@ it actually says no.
 | `check-hire.py` | Refuses an incomplete hire: 22 checks over one agent, from the contract frontmatter and the id to the shim, the skills, the guards and the research brief. `--self-test` plants every defect and proves each check can go red | `check-hire.py <Name>`, `check-hire.py --all` |
 | `check-agent-shim-mcp.py` | Refuses a web research tool (WebSearch, WebFetch, a search MCP) on the shim of an agent that reads your private notes (Penn); check-hire check 11 runs it | `check-agent-shim-mcp.py`, `--self-test` |
 | `check-onboarding.py` | Says whether this vault is FRESH or already lived in, so the first session knows which greeting to give | `check-onboarding.py` |
-| `checkpoint.py` | The deterministic half of a session checkpoint: what shipped, what is still open, and whether THIS session wrote its completion receipt | `checkpoint.py --write-receipt --output "<log>"`, then `checkpoint.py --assert-logged` |
+| `checkpoint.py` | The deterministic half of a session checkpoint: what shipped, what is still open, and whether THIS session wrote its completion receipt | `checkpoint.py --write-receipt --output "<log>"`, then `checkpoint.py --assert-logged --assert-dates-linked --assert-wikilinks` |
 | `import-file.py` | Copies one external file into the scaffold with the placement rules enforced | `import-file.py <path>` |
 | `import-inventory.py` | Scans an external knowledge source and reports what is in it, as JSON, before anything is imported | `import-inventory.py <folder>` |
 | `mint-agent-ids.py` | Gives every agent contract its stable `myicor_id`, and checks that none is missing, malformed or shared | `mint-agent-ids.py --check` |
 | `new-agent.py` | The scripted half of a hire: the agent folder, the contract and bio skeletons, the minted id, the first `Journal/` entry, and the index row. Refuses to overwrite a contract. Drops `06 AI Team/Agents/<Name>/.hiring`, the marker that lets the write guard accept writes to that one contract for the next 24 hours; a green `check-hire.py <Name>` deletes it. No `ICOR_UNLOCK_WRITES` on a hire | `new-agent.py <Name> --slug <slug> --role "<Role>"` |
 | `new-progress-report.py` | Creates or re-stamps the `progress-report.md` inside a work folder of the `wip` concept (GL-1013) | `new-progress-report.py --wip <folder> --touch` |
-| `new-session-log.py` | Creates a session log skeleton in `Session Logs/YYYY/MM/` | `new-session-log.py --agent larry --slug ...` |
+| `new-session-log.py` | Creates a session log skeleton in `Session Logs/YYYY/MM/` | `new-session-log.py --agent aiden --slug ...` |
 | `new-task.py` | Creates a task, or moves one through open, in-progress, done and cancelled | `new-task.py new --slug ... --title ... --assignee penn` |
 | `run-red-tests.py` | Feeds every guard in this folder something it must reject and confirms it says no | `run-red-tests.py` |
 | `scaffold-init.py` | Generates the whole harness layer from the scaffold's own frontmatter: skills, agent shims for three hosts, hook configs and host pointer files. `plan` shows, `apply` writes, `check` refuses a drift or a hand-edit, `doctor` reports per host | `scaffold-init.py plan`, then `apply`, `check`, `doctor` |
@@ -44,6 +44,7 @@ it actually says no.
 | `mypka-update.py` | Applies a new myPKA or ICOR for Life release to your folder, in mode A or mode B, without losing an edit of yours and without deleting anything. Dry run first, then `--live` | `mypka-update.py --release <folder> --target <folder>` |
 | `resolve.py` | Turns a concept (`journal`, `wip/operations`) into a place, and finds the myPKA root; the only code that does either (GL-1013) | `resolve.py --check` |
 | `validate-team.py` | Validates what the team ships and keeps under the team root: the team half of the old `validate-scaffold.py` | `validate-team.py .` |
+| `check-drift.py` | Names the shipped files you have edited: a live path whose sha256 differs from its pin in the installed manifest. Those are the files the next update will not overwrite and whose upstream change will land as a `<file>.update` sidecar, so each is a port-forward obligation. Read-only; also surfaces a pending sidecar, a missing shipped file, and why a drifted path is not an obligation (`seed`, `examples`, your own `.obsidian` settings, the record itself). `--self-test` proves every direction on a throwaway tree | `check-drift.py .` |
 | `noteio.py` | Reads and writes a member's file without rewriting a byte the caller never meant to touch; ICOR for Life carries a pinned copy as `noteio-icor.py` | (the scripts import it) |
 | `hooks-rules.json` | The one table of guard rules each host's hook config is rendered from | (read by `scaffold-init.py`) |
 
@@ -84,10 +85,25 @@ closes, the session, when it started and finished, the inputs and outputs
 with their sha256, which version of the script wrote it, and anything
 knowingly left open. `--assert-logged` reads THAT, so a session log written
 in the morning can no longer close an afternoon session that wrote nothing.
-The session id comes from `.mypka/state/session.json`, written by
-`session-start.py`. Where there is no session start hook there is no id, and
+The session id is read first from a host variable (`HERMES_SESSION_ID`, then
+`ICOR_SESSION_ID`), then from `.mypka/state/session.json`, written by
+`session-start.py`. That file is ONE slot shared by every session in the vault,
+so when the id in it was minted (the host sent none) `checkpoint.py` refuses a
+bare call and wants `--session-id <id>`, the id the start ritual printed. A
+host-sent id is unique per session, needs no flag, and derives the receipt's
+window from its own timestamp. An override also no longer
+borrows the slot's `started`, and `--write-receipt` refuses to overwrite a
+receipt that records a different session start. Where no variable is set and
+there is no session start hook there is no id, and
 the assert says so rather than guessing; `--assert-logged-today` is the old
 date-only check, kept under its true name and weaker by design.
+`--assert-dates-linked` fails while any date mention in scope has no daily
+note (GL-1011). `--assert-wikilinks` runs `check-wikilinks.py` over THIS
+session's receipt `outputs` — never the whole tree — with the content source
+as a second root, so it fails only on a link that resolves in NEITHER vault:
+the standing mode-B cross-tree links are `cross_tree`, not a failure. It is
+fail-closed — a guard it cannot run, or a receipt it cannot read, is a FAIL,
+never a pass.
 
 ## Optional AI Team packs
 

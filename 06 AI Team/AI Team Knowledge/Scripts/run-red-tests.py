@@ -53,6 +53,16 @@ os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
 # out of, which in CI is the repo itself.
 sys.dont_write_bytecode = True
 
+# And the same idea for SESSION IDS, which the suite must never inherit. Both
+# scripts now read the host's own variable (`HERMES_SESSION_ID`), so a suite run
+# from a real session would hand the operator's id to every child and every
+# fixture would take the "this session named itself" path instead of the
+# hostless path each case was written for. Setting it here reaches the children
+# that inherit the environment AND the ones that copy it into an `env=` dict;
+# `fixture_env()` covers the cases that need a specific id.
+for _sid_var in ("HERMES_SESSION_ID", "ICOR_SESSION_ID"):
+    os.environ.pop(_sid_var, None)
+
 _re5date = re.compile(r"(?m)^\s*date links\s*:\s*\d+ mention")
 
 HERE = Path(__file__).resolve().parent
@@ -308,7 +318,7 @@ def fingerprint(paths):
 _STATE0 = fingerprint([ROOT / ".mypka" / "state"])
 
 
-def expect_fail(name, argv, cwd=None, unchanged=None):
+def expect_fail(name, argv, cwd=None, unchanged=None, env=None):
     """The guard must exit non-zero AND, when `unchanged` names files, it
     must not have touched a byte of them.
 
@@ -322,7 +332,7 @@ def expect_fail(name, argv, cwd=None, unchanged=None):
     checks += 1
     watch = [Path(p) for p in (unchanged or [])]
     before = fingerprint(watch)
-    r = subprocess.run([PY] + argv, capture_output=True, text=True, cwd=cwd)
+    r = subprocess.run([PY] + argv, capture_output=True, text=True, cwd=cwd, env=env)
     if r.returncode == 0:
         fails.append(f"{name}: accepted bad input (guard is green when it must be red)")
     after = fingerprint(watch)
@@ -346,10 +356,10 @@ def expect_ok(name, argv, cwd=None, env=None):
     return r
 
 
-def expect_refusal(name, argv, cwd=None, unchanged=None):
+def expect_refusal(name, argv, cwd=None, unchanged=None, env=None):
     """expect_fail, plus: the red must be a FAIL line, not a traceback. A
     crash exits 1 too, and a crash teaches the operator nothing."""
-    r = expect_fail(name, argv, cwd, unchanged=unchanged)
+    r = expect_fail(name, argv, cwd, unchanged=unchanged, env=env)
     if "Traceback" in (r.stderr or ""):
         fails.append(f"{name}: crashed with a traceback instead of refusing")
     return r
@@ -409,6 +419,29 @@ CONTENT_ROOMS = ("04 Inner World", "00 Daily Scratchpad", "01 Inbox", "03 WiP")
 # reason that has nothing to do with the guard under test.
 HEAVY_ROOMS = ("05 Assets", "03 WiP", "07 Databases")
 _ROOT_RES = ROOT.resolve()
+
+# Every environment variable a host may use to hand a session its id. Both
+# scripts read these in this order; the suite must strip ALL of them from any
+# fixture env, or a case silently inherits the operator's own session.
+SESSION_ID_ENV = ("ICOR_SESSION_ID", "HERMES_SESSION_ID")
+
+
+def fixture_env(**overrides):
+    """A subprocess env with every SESSION ID the host may have exported removed.
+
+    The suite must not inherit the id of whoever ran it. `ICOR_SESSION_ID` was
+    the only one that existed when these cases were written, so each call site
+    popped that one by name — and adding a second host variable silently
+    re-introduced the leak everywhere at once: a case that meant to exercise
+    "no id from the host" would instead pick up the operator's real session id
+    and take a path nobody wrote it for. One helper, so the next host variable
+    is a one-line change here rather than five scattered pops.
+    """
+    env = dict(os.environ)
+    for var in SESSION_ID_ENV:
+        env.pop(var, None)
+    env.update(overrides)
+    return env
 
 
 def fixture_ignore(*names):
@@ -550,6 +583,28 @@ with tempfile.TemporaryDirectory() as td:
     if "not in YYYY/MM/" not in (_r_flat.stderr or ""):
         fails.append("validate-team/session-log-not-nested: went red, but not for the nesting: "
                      + (_r_flat.stderr or "").strip()[:200])
+    # validate-team check 2, the other direction: a PROMOTED task moved to
+    # done/ sits at done/YYYY/MM/<stem>/<stem>.md — four parts, not three.
+    # new-task.py moves it as a folder ("deliverables and all", GL-1013: "the
+    # folder travels with the task"), so the guard must accept that shape
+    # instead of calling correct placement a violation.
+    _prom = tmp / "team-promoted-done"
+    shutil.copytree(ROOT, _prom, ignore=fixture_ignore(".git", ".obsidian"))
+    _p_stem = "2026-09-24-promoted-probe"
+    _p_dir = resolver.team_path("tasks", root=_prom) / "done/2026/09" / _p_stem
+    (_p_dir / "deliverables").mkdir(parents=True, exist_ok=True)
+    (_p_dir / (_p_stem + ".md")).write_text("---\ntype: task\nstatus: done\n---\n\n# probe\n")
+    (_p_dir / "deliverables" / "notes-draft.md").write_text("draft\n")
+    expect_ok("validate-team/promoted-task-in-done", [str(HERE / "validate-team.py"), str(_prom)])
+    # …and a wrong nesting inside done/ stays red: a folder whose inner note
+    # name does not match the folder stem is not the promoted shape.
+    _p_bad = _p_dir / (_p_stem + "-mismatch.md")
+    (_p_dir / (_p_stem + ".md")).rename(_p_bad)
+    _r_pbad = expect_refusal("validate-team/promoted-task-stem-mismatch",
+                             [str(HERE / "validate-team.py"), str(_prom)])
+    if "not in YYYY/MM/" not in (_r_pbad.stderr or ""):
+        fails.append("validate-team/promoted-task-stem-mismatch: went red, but not for the nesting: "
+                     + (_r_pbad.stderr or "").strip()[:200])
     # 2. validate-scaffold must reject an ICOR stage folder name
     bad = tmp / "bad-scaffold"
     shutil.copytree(ROOT, bad, ignore=fixture_ignore(".obsidian"))
@@ -695,6 +750,19 @@ with tempfile.TemporaryDirectory() as td:
     tk = nolog / "06 AI Team/AI Team Knowledge/Tasks"
     lg = nolog / "06 AI Team/AI Team Knowledge/Session Logs/2026/09"
     lg.mkdir(parents=True, exist_ok=True)
+    # CLEAR THE COPIED LOGS BEFORE 1d AND 1e. The cutoff is the NEWEST log BY
+    # NAME, and this fixture is a copy of ROOT, so without this the vault's own
+    # (always-growing) history decides the cutoff for both cases. It did exactly
+    # that on 2026-09-30: the newest real log had reached 2026-09-29-23-58, the
+    # cutoff moved PAST 1e's hour-ago task, and 1e went red on a run that changed
+    # nothing. Deriving a later name instead does not help — it only moves the
+    # cutoff into the future, which misses the task just the same (measured). The
+    # two cases need a log set they own, so they get one: after this, the newest
+    # log by name is the one the case plants, whatever the vault has been doing.
+    # 1b and 1c run before this point and are unaffected.
+    _logdir = nolog / "06 AI Team/AI Team Knowledge/Session Logs"
+    for _p in list(_logdir.glob("*/*/*.md")):
+        _p.unlink()
     plog = lg / "2026-09-06-10-00_larry_probe.md"; plog.write_text("---\ntype: session-log\n---\n")
     day_ago = _time.time() - 86400
     _os.utime(plog, (day_ago, day_ago))
@@ -719,8 +787,14 @@ with tempfile.TemporaryDirectory() as td:
     #     member simply reopening the log all move its mtime forward, which
     #     put the cutoff in the future and reported `tasks touched : 0` on a
     #     session that had shipped work. The fixture is exactly that shape: a
-    #     log NAMED 2026-09-06-10-00 whose mtime is right now, and a task
+    #     log NAMED 2026-09-06-11-00 whose mtime is right now, and a task
     #     touched an hour ago, which must still be in the report.
+    #
+    #     Because the copied logs were cleared above, this log IS the newest
+    #     by name — which is what the case needs. Its name must stay EARLIER
+    #     than "an hour ago": a name in the future puts the cutoff there and
+    #     the hour-ago task is correctly excluded, so a later name would test
+    #     the opposite of the intended thing (measured 2026-09-30).
     touched_log = lg / "2026-09-06-11-00_larry_synced.md"
     touched_log.write_text("---\ntype: session-log\n---\n")
     _os.utime(touched_log, (_time.time(), _time.time()))
@@ -738,10 +812,70 @@ with tempfile.TemporaryDirectory() as td:
             fails.append("checkpoint/log-time-from-the-name: a task touched an "
                          "hour ago is missing from the report because the last "
                          "log's mtime is now; the cutoff must come from the "
-                         "log's filename")
+                         "log's filename (cutoff was %s, newest log by name %s)"
+                         % (rep.get("cutoff"), touched_log.name))
     except Exception as e:
         fails.append("checkpoint/log-time-from-the-name: report unreadable (%s)" % e)
     _os.utime(touched_log, (day_ago, day_ago))
+
+    # 1f. A TASK'S ENTRY MUST CARRY WHEN IT WAS TOUCHED, so a report a SIBLING
+    #     session's window captured can be attributed. `tasks_touched_since_last_log`
+    #     selects by mtime inside the cutoff window and carries no author, so a task
+    #     another live session edited lands in this session's list and reads as work
+    #     to close here (the 23:58 session's report named
+    #     2026-09-29-gl1002-update-overwrite-risk, touched at 00:09:55 by the other
+    #     session; closing it would have moved their in-flight task). The judgement
+    #     step needs the instant, not just membership; before this the entry was
+    #     {state, file, path} and the only way to attribute was to stat the file by
+    #     hand from outside the report. Three directions: the entry carries a
+    #     parseable `touched`; it is the task's own mtime (not `now`, which is what a
+    #     field computed at print time would give); and it sits inside the window the
+    #     entry was selected by.
+    _own_log = lg / "2026-09-06-12-00_attrib_probe.md"
+    _own_log.write_text("---\ntype: session-log\n---\n")
+    _os.utime(_own_log, (day_ago, day_ago))
+    _attrib = tk / "open/2026-09-07-004-attrib-probe.md"
+    _attrib.write_text("---\ntype: task\nstatus: open\n---\n")
+    _two_hours = _time.time() - 7200
+    _os.utime(_attrib, (_two_hours, _two_hours))
+    _os.utime(_own_log, (_time.time() - 10800, _time.time() - 10800))
+    r = subprocess.run([PY, str(HERE / "checkpoint.py"), str(nolog), "--json"],
+                       capture_output=True, text=True)
+    checks += 1
+    try:
+        rep = _json.loads(r.stdout)
+        row = next((e for e in rep["tasks_touched_since_last_log"]
+                    if e.get("file") == _attrib.name), None)
+        if row is None:
+            fails.append("checkpoint/touched-entry-carries-its-time: the touched task "
+                         "is not in the report at all, so nothing can be attributed")
+        elif "touched" not in row:
+            fails.append("checkpoint/touched-entry-carries-its-time: the entry carries "
+                         "no `touched` field, so a sibling's edit is indistinguishable "
+                         "from this session's (keys: %s)" % sorted(row))
+        else:
+            try:
+                import datetime as _dt
+                got = _dt.datetime.fromisoformat(str(row["touched"]).replace("Z", "+00:00"))
+            except ValueError:
+                fails.append("checkpoint/touched-entry-carries-its-time: `touched` is "
+                             "not a parseable instant (%r)" % row.get("touched"))
+            else:
+                if got.tzinfo is None:
+                    got = got.astimezone()
+                if abs((got.timestamp() - _two_hours)) > 5:
+                    fails.append("checkpoint/touched-entry-carries-its-time: `touched` "
+                                 "is not the task's own mtime (got %s, mtime %s) — a "
+                                 "value computed at print time cannot attribute an edit"
+                                 % (row["touched"],
+                                    _dt.datetime.fromtimestamp(_two_hours).astimezone().isoformat()))
+                elif not (got.timestamp() > _dt.datetime.fromisoformat(
+                        str(rep["cutoff"]).replace("Z", "+00:00")).timestamp()):
+                    fails.append("checkpoint/touched-entry-carries-its-time: `touched` "
+                                 "falls OUTSIDE the cutoff window the entry was selected "
+                                 "by, so it cannot explain the selection")
+    except Exception as e:
+        fails.append("checkpoint/touched-entry-carries-its-time: report unreadable (%s)" % e)
 
     # 2b. validate-team must reject an agent folder without its bio
     bad2 = tmp / "bad-scaffold-2"
@@ -1132,6 +1266,609 @@ with tempfile.TemporaryDirectory() as td:
     # the red above is just "receipts are broken"
     expect_ok("checkpoint/receipt-names-the-work-control", _cp[1:])
 
+    # 6d2. ONE SESSION.JSON SLOT, MANY SESSIONS (task 2026-09-28-session-json-
+    #      single-slot-concurrent-sessions). session.json belongs to whichever
+    #      session minted it last. A caller that overrides the id is, by
+    #      definition, not that session, so it must not borrow that session's
+    #      `started`, and a receipt must never be silently taken over by a
+    #      session with a different start.
+    _rdir = cpv / ".mypka" / "state" / "receipts"
+    _sj = cpv / ".mypka" / "state" / "session.json"
+    _sj_text = _sj.read_text(encoding="utf-8")
+    _other = ["--session-id", "other-session"]
+    expect_ok("checkpoint/override-receipt-control", _cp[1:] + _other)
+    checks += 1
+    try:
+        _orec = json.loads((_rdir / "other-session.json").read_text(encoding="utf-8"))
+        if _orec.get("started") == "2026-09-14T01:00:00Z":
+            fails.append("checkpoint/override-borrows-started: a receipt written with "
+                         "--session-id copied `started` from session.json, which "
+                         "belongs to a different session")
+    except (OSError, ValueError) as e:
+        fails.append(f"checkpoint/override-borrows-started: no readable receipt ({e})")
+    # the same override run again is the same session, not a collision
+    expect_ok("checkpoint/override-rerun-is-not-a-collision", _cp[1:] + _other)
+    # and the cutoff must not come from the other session's start either
+    checks += 1
+    _cj = subprocess.run([PY, str(HERE / "checkpoint.py"), str(cpv), "--json"] + _other,
+                         capture_output=True, text=True)
+    try:
+        if json.loads(_cj.stdout).get("cutoff_source") == "session.json started":
+            fails.append("checkpoint/override-borrows-cutoff: --session-id still took "
+                         "the task cutoff from another session's session.json")
+    except ValueError as e:
+        fails.append(f"checkpoint/override-borrows-cutoff: report unreadable ({e})")
+    # a DIFFERENT session that resolves the same id, with a different start,
+    # must be refused, and the first session's receipt left byte-for-byte alone
+    _sj.write_text(_sj_text.replace("2026-09-14T01:00:00Z", "2026-09-14T09:00:00Z"),
+                   encoding="utf-8")
+    expect_refusal("checkpoint/receipt-refuses-a-different-session's-start", _cp[1:],
+                   unchanged=[_rdir / "red-test-session.json"])
+    # --assert-logged must not pass a receipt whose session start is not the
+    # start of the session it is being asked about
+    expect_fail("checkpoint/assert-logged-rejects-a-different-start",
+                [str(HERE / "checkpoint.py"), str(cpv), "--assert-logged"])
+    # control: the original session.json again, and both succeed
+    _sj.write_text(_sj_text, encoding="utf-8")
+    expect_ok("checkpoint/assert-logged-same-session-control",
+              [str(HERE / "checkpoint.py"), str(cpv), "--assert-logged"])
+    expect_ok("checkpoint/receipt-rewrite-same-session-control", _cp[1:])
+
+    # 6d3. THE SAME-SLOT GAP. Two sessions with no host id each run bare
+    #      `checkpoint.py`; both read the ONE minted id out of session.json, so
+    #      no check inside checkpoint.py can tell them apart. When the slot's
+    #      id was MINTED (no host sent one) a bare call is therefore ambiguous
+    #      and must be refused, naming the lever (--session-id). The session
+    #      is handed its own id by the start ritual.
+    _sj.write_text(json.dumps({"schema": 1, "session_id": "local-minted01",
+                               "started": "2026-09-14T01:00:00Z",
+                               "id_source": "minted here (the host sent no session id)"}),
+                   encoding="utf-8")
+    _before = sorted(p.name for p in _rdir.glob("*.json"))
+    expect_refusal("checkpoint/minted-slot-refuses-a-bare-write", _cp[1:])
+    checks += 1
+    if sorted(p.name for p in _rdir.glob("*.json")) != _before:
+        fails.append("checkpoint/minted-slot-refuses-a-bare-write: it refused and "
+                     "wrote a receipt anyway")
+    expect_refusal("checkpoint/minted-slot-refuses-a-bare-assert",
+                   [str(HERE / "checkpoint.py"), str(cpv), "--assert-logged"])
+    # controls: naming the id is the lever and must work in both directions
+    expect_ok("checkpoint/minted-slot-named-id-writes",
+              _cp[1:] + ["--session-id", "local-minted01"])
+    expect_ok("checkpoint/minted-slot-named-id-asserts",
+              [str(HERE / "checkpoint.py"), str(cpv), "--assert-logged",
+               "--session-id", "local-minted01"])
+    # and the ritual must HAND the session its id and say to use it, or the
+    # refusal above is a dead end
+    checks += 1
+    _ss2 = subprocess.run([PY, str(HERE / "session-start.py")],
+                          capture_output=True, text=True, input="",
+                          env=dict(os.environ, CLAUDE_PROJECT_DIR=str(cpv)))
+    _m = re.search(r"session id: (local-[0-9a-f]+)", _ss2.stdout)
+    if not _m:
+        fails.append("session-start/hands-over-the-minted-id: no `session id: local-...` "
+                     "line in the ritual output")
+    elif "--session-id " + _m.group(1) not in _ss2.stdout:
+        fails.append("session-start/hands-over-the-minted-id: the ritual minted an id "
+                     "but never says to pass it to checkpoint.py as --session-id")
+    _sj.write_text(_sj_text, encoding="utf-8")
+
+    # 6d4. A HOST-SUPPLIED ID CARRIES THE SESSION'S START. `--session-id
+    #      20260914_030000_x` names a session that began at a known instant, but
+    #      the slot holds ANOTHER session's start (or none), so both halves fell
+    #      back: the receipt recorded `started` = now, which is a ZERO-WIDTH
+    #      window that hides every task the session touched, and the report's
+    #      `cutoff_source` became the last session log's name. The id itself is
+    #      the honest answer, and deriving from it is the same rule the
+    #      session-lifecycle skill prescribes for a mis-filed `started`
+    #      (`YYYYMMDD_HHMMSS` is local time). A minted `local-...` id carries no
+    #      timestamp and must keep the old fallback, which 6d3 above already
+    #      covers.
+    import datetime as _dt4
+    _hid = "20260914_030000_redtest"
+    _expect_started = (_dt4.datetime.strptime("20260914030000", "%Y%m%d%H%M%S")
+                       .astimezone(_dt4.timezone.utc).isoformat().replace("+00:00", "Z"))
+    expect_ok("checkpoint/host-id-receipt-control", _cp[1:] + ["--session-id", _hid])
+    checks += 1
+    try:
+        _hrec = json.loads((_rdir / (_hid + ".json")).read_text(encoding="utf-8"))
+        if _hrec.get("started") != _expect_started:
+            fails.append("checkpoint/host-id-start-is-derived: a receipt for %s records "
+                         "`started` %s; the id names %s, so the receipt claims a session "
+                         "that began at the checkpoint moment and its work falls outside "
+                         "its own window"
+                         % (_hid, _hrec.get("started"), _expect_started))
+    except (OSError, ValueError) as e:
+        fails.append("checkpoint/host-id-start-is-derived: no readable receipt (%s)" % e)
+    checks += 1
+    _hj = subprocess.run([PY, str(HERE / "checkpoint.py"), str(cpv), "--json",
+                          "--session-id", _hid], capture_output=True, text=True)
+    try:
+        if json.loads(_hj.stdout).get("cutoff_source") != "derived from the session id":
+            fails.append("checkpoint/host-id-cutoff-is-derived: the report over a named "
+                         "host id did not take its cutoff from the id, so the task list "
+                         "is computed over the wrong window")
+    except ValueError as e:
+        fails.append("checkpoint/host-id-cutoff-is-derived: report unreadable (%s)" % e)
+    # The fix must not make a session unable to REFRESH its own receipt: a receipt
+    # written before the fix carries `started` == `finished` (the pre-derivation
+    # fallback), which is a bogus value, not another session. The rewrite must go
+    # through and land the derived start.
+    checks += 1
+    try:
+        _pre = json.loads((_rdir / (_hid + ".json")).read_text(encoding="utf-8"))
+        _pre["started"] = _pre["finished"]          # the legacy zero-width shape
+        (_rdir / (_hid + ".json")).write_text(json.dumps(_pre, indent=2) + "\n",
+                                              encoding="utf-8")
+    except (OSError, ValueError) as e:
+        fails.append("checkpoint/legacy-started-does-not-block-rewrite: could not plant "
+                     "the legacy shape (%s)" % e)
+    expect_ok("checkpoint/legacy-started-does-not-block-rewrite", _cp[1:] + ["--session-id", _hid])
+    checks += 1
+    try:
+        _post = json.loads((_rdir / (_hid + ".json")).read_text(encoding="utf-8"))
+        if _post.get("started") != _expect_started:
+            fails.append("checkpoint/legacy-started-does-not-block-rewrite: the legacy "
+                         "`started` was not replaced by the derived one (got %s)"
+                         % _post.get("started"))
+    except (OSError, ValueError) as e:
+        fails.append("checkpoint/legacy-started-does-not-block-rewrite: no readable "
+                     "receipt after the rewrite (%s)" % e)
+    # and a REAL collision (a prior start that is not the legacy shape) must still
+    # be refused, with the first receipt left byte-for-byte alone
+    checks += 1
+    try:
+        _col = json.loads((_rdir / (_hid + ".json")).read_text(encoding="utf-8"))
+        _col["started"] = "2026-09-14T09:00:00Z"     # not == finished
+        (_rdir / (_hid + ".json")).write_text(json.dumps(_col, indent=2) + "\n",
+                                              encoding="utf-8")
+    except (OSError, ValueError) as e:
+        fails.append("checkpoint/real-collision-still-refused: could not plant it (%s)" % e)
+    expect_refusal("checkpoint/real-collision-still-refused", _cp[1:] + ["--session-id", _hid],
+                   unchanged=[_rdir / (_hid + ".json")])
+
+    # 6d5. THE SAME-SLOT GAP, LIVE CASE (task 2026-09-29-receipt-repair-refused-
+    #      by-own-guard, defect 0). Two sessions both hold the one minted
+    #      `local-...` id and both read the SAME `started` out of the one shared
+    #      session.json, so every start-based comparison matches and the guard
+    #      is blind exactly where the loss happens. On 2026-09-29 the donations
+    #      session's write silently replaced the contacts-crm session's
+    #      receipt (same id, same start, different session). The discriminator
+    #      is the prior receipt's own session LOG, the one field not derived
+    #      from the shared slot: a different log that no other receipt claims
+    #      means a real session's only record is about to be destroyed.
+    _rdir.mkdir(parents=True, exist_ok=True)
+    _logA = ("06 AI Team/AI Team Knowledge/Session Logs/2026/09/"
+             "2026-09-29-15-13_aiden_contacts-crm-cleanup.md")
+    _logB = ("06 AI Team/AI Team Knowledge/Session Logs/2026/09/"
+             "2026-09-29-15-45_aiden_donations-session.md")
+    (cpv / _logA).write_text("# session A\n", encoding="utf-8")
+    (cpv / _logB).write_text("# session B\n", encoding="utf-8")
+    _sidm = "local-deadbeef0001"
+    # The slot as it really was: minted id, one `started`, shared by both.
+    _sj.write_text(json.dumps({"schema": 1, "session_id": _sidm,
+                               "started": "2026-09-29T20:12:51Z",
+                               "id_source": "minted here (the host sent no session id)"}),
+                   encoding="utf-8")
+    # Session A's receipt, written at 15:13 with that same `started`.
+    # Built here, not from `_cp` — `_cp` also names the fixture's own log, which
+    # would be a second log in every receipt below and blur the very overlap
+    # these cases turn on.
+    def _wr(*args):
+        return ([str(HERE / "checkpoint.py"), str(cpv), "--write-receipt"] + list(args))
+
+    expect_ok("checkpoint/same-slot-same-start-different-session-seeds-A",
+              _wr("--session-id", _sidm, "--output", _logA))
+    _recA = _rdir / (_sidm + ".json")
+    _a_before = _recA.read_text(encoding="utf-8")
+    # Session B, holding the SAME id and the SAME slot `started`, writes its
+    # own log. Before the fix this OVERWROTE A's receipt in silence.
+    expect_refusal("checkpoint/same-id-same-start-different-session-refused",
+                   _wr("--session-id", _sidm, "--output", _logB),
+                   unchanged=[_recA])
+    checks += 1
+    if _recA.read_text(encoding="utf-8") != _a_before:
+        fails.append("checkpoint/same-id-same-start-different-session-refused: A's "
+                     "receipt does not survive byte-for-byte; the guard wrote before "
+                     "it refused")
+    # The control: the SAME session re-writing its OWN receipt (same log) after
+    # adding an output is ordinary and must not be caught by the new guard.
+    expect_ok("checkpoint/same-session-rewrite-control",
+              _wr("--session-id", _sidm, "--output", _logA))
+    _recA.unlink()
+    _sj.write_text(_sj_text, encoding="utf-8")
+
+    # 6d6. A DESTROYED RECEIPT MUST BE REBUILDABLE WITH THE SCRIPT ALONE
+    #      (task 2026-09-29-receipt-repair-refused-by-own-guard, defects 2 and
+    #      3). `started` fell back to the repair moment for a minted id (no
+    #      timestamp to derive from) and `finished` was always stamped now, so
+    #      the rebuild only worked by hand-editing JSON — and once a prior
+    #      receipt with a different `started` existed, the writer refused to
+    #      correct it instead. --reconstruct with --started/--finished is the
+    #      way back, and the strict path must not have been widened with it.
+    _sidr = "local-cafe00000002"
+    _logC = ("06 AI Team/AI Team Knowledge/Session Logs/2026/09/"
+             "2026-09-29-16-00_aiden_rebuild-me.md")
+    (cpv / _logC).write_text("# session C\n", encoding="utf-8")
+    _sj.write_text(json.dumps({"schema": 1, "session_id": _sidr,
+                               "started": "2026-09-29T20:12:51Z",
+                               "id_source": "minted here (the host sent no session id)"}),
+                   encoding="utf-8")
+    expect_ok("checkpoint/reconstruct-writes-the-receipt",
+              _wr("--session-id", _sidr, "--output", _logC))
+    (_rdir / (_sidr + ".json")).unlink()          # the receipt was destroyed
+    # Rebuild it with the script alone: no hand-edited JSON.
+    expect_ok("checkpoint/reconstruct-rebuild",
+              _wr("--reconstruct", "--session-id", _sidr,
+                  "--started", "2026-09-29T20:12:51Z",
+                  "--finished", "2026-09-29T20:13:50Z",
+                  "--output", _logC))
+    checks += 1
+    try:
+        _rrec = json.loads((_rdir / (_sidr + ".json")).read_text(encoding="utf-8"))
+        if _rrec.get("started") != "2026-09-29T20:12:51Z":
+            fails.append("checkpoint/reconstruct-lands-the-real-start: the rebuilt "
+                         "receipt records `started` %s; the session's own start is "
+                         "2026-09-29T20:12:51Z, and a repair moment there is a "
+                         "zero-width window that hides the session's work"
+                         % _rrec.get("started"))
+        if _rrec.get("finished") != "2026-09-29T20:13:50Z":
+            fails.append("checkpoint/reconstruct-lands-the-real-finish: the rebuilt "
+                         "receipt records `finished` %s; the session's last action was "
+                         "2026-09-29T20:13:50Z, and only the repair moment is "
+                         "reachable without --finished" % _rrec.get("finished"))
+    except (OSError, ValueError) as e:
+        fails.append("checkpoint/reconstruct-lands-the-real-start: no readable "
+                     "receipt after the rebuild (%s)" % e)
+    expect_ok("checkpoint/reconstruct-asserts-clean",
+              [str(HERE / "checkpoint.py"), str(cpv), "--assert-logged",
+               "--session-id", _sidr])
+    # The strict path must not have been widened: without the flag, a
+    # disagreement is still refused and the prior receipt is left alone.
+    checks += 1
+    try:
+        _rrec2 = json.loads((_rdir / (_sidr + ".json")).read_text(encoding="utf-8"))
+        _rrec2["started"] = "2026-09-29T09:00:00Z"
+        (_rdir / (_sidr + ".json")).write_text(json.dumps(_rrec2, indent=2) + "\n",
+                                              encoding="utf-8")
+    except (OSError, ValueError) as e:
+        fails.append("checkpoint/reconstruct-is-not-a-way-around-the-strict-path: "
+                     "could not plant it (%s)" % e)
+    expect_refusal("checkpoint/reconstruct-is-not-a-way-around-the-strict-path",
+                   _wr("--session-id", _sidr, "--output", _logC),
+                   unchanged=[_rdir / (_sidr + ".json")])
+    # ...but --reconstruct CAN correct the same session's own window (its own log)
+    expect_ok("checkpoint/reconstruct-corrects-its-own-window",
+              _wr("--reconstruct", "--session-id", _sidr,
+                  "--started", "2026-09-29T20:12:51Z",
+                  "--finished", "2026-09-29T20:13:50Z",
+                  "--output", _logC))
+    # ...and it is NOT a way past the two-sessions-one-id refusal: when the
+    # receipt on disk names a DIFFERENT session's log, --reconstruct refuses
+    # too. That is the whole point of gating the repair behind the same
+    # evidence test — a flag that waived it would be a licence to destroy.
+    checks += 1
+    try:
+        _st = json.loads((_rdir / (_sidr + ".json")).read_text(encoding="utf-8"))
+        _st["outputs"] = {_logA: "0" * 64}      # another session's log
+        (_rdir / (_sidr + ".json")).write_text(json.dumps(_st, indent=2) + "\n",
+                                               encoding="utf-8")
+    except (OSError, ValueError) as e:
+        fails.append("checkpoint/reconstruct-cannot-steal-another-session: could not "
+                     "plant the foreign log (%s)" % e)
+    expect_refusal("checkpoint/reconstruct-cannot-steal-another-session",
+                   _wr("--reconstruct", "--session-id", _sidr,
+                       "--started", "2026-09-29T20:12:51Z",
+                       "--finished", "2026-09-29T20:13:50Z",
+                       "--output", _logC),
+                   unchanged=[_rdir / (_sidr + ".json")])
+    # With no receipt on disk at all, the remaining cases test their own cause
+    # rather than tripping the log anchor.
+    (_rdir / (_sidr + ".json")).unlink(missing_ok=True)
+    # --reconstruct needs --started; a repair moment is not a session start
+    expect_refusal("checkpoint/reconstruct-needs-a-start",
+                   _wr("--reconstruct", "--session-id", _sidr, "--output", _logC))
+    # a window that runs backwards is refused
+    expect_refusal("checkpoint/reconstruct-refuses-a-backwards-window",
+                   _wr("--reconstruct", "--session-id", _sidr,
+                       "--started", "2026-09-29T21:00:00Z",
+                       "--finished", "2026-09-29T20:13:50Z",
+                       "--output", _logC))
+    # --started/--finished outside --reconstruct are refused, never ignored
+    expect_refusal("checkpoint/started-without-reconstruct-refused",
+                   _wr("--session-id", _sidr, "--started", "2026-09-29T20:12:51Z",
+                       "--output", _logC))
+    _sj.write_text(_sj_text, encoding="utf-8")
+
+    # 6d8. THE UNPINNED-LOG COUNT MUST BE DATED, NOT RAW (ruling 2026-09-30).
+    #      A log with no receipt looks the same whether a session failed to
+    #      close or closed before receipts existed here, and only the DATE
+    #      separates them. The raw count on this vault was 25, of which 24 sat
+    #      BEFORE the first receipt the vault holds and 1 sat AFTER it — the
+    #      one genuine gap, and the only one worth flagging. This case builds
+    #      exactly that shape and checks all three buckets, because a guard
+    #      that reports one number cannot tell them apart and a guard that
+    #      flags all 25 would be permanently red and therefore ignored.
+    #
+    #      The comparison is at MINUTE precision. A day-level line gets it
+    #      wrong in a way that matters: on this vault the earliest receipt is
+    #      `2026-09-27T00:49:22Z` = 2026-09-26 19:49 LOCAL, and the log that is
+    #      the real gap falls between that instant and the next receipt. A
+    #      date-level line draws itself at 09-26 00:00 and swallows the gap.
+    _un = cpv / "06 AI Team/AI Team Knowledge/Session Logs/2026/09"
+    _un.mkdir(parents=True, exist_ok=True)
+    for _stale in _un.glob("*.md"):
+        _stale.unlink()
+    _un_sj = cpv / ".mypka" / "state" / "session.json"
+    _un_sj_text = _un_sj.read_text(encoding="utf-8")
+    # CLEAR THE COMPETING RECEIPTS. The line is `min(receipt started)`, and the
+    # cases earlier in this block left receipts carrying the fixture slot's
+    # older `started` (2026-09-14), which would draw the line a week before the
+    # planted logs and bucket every one of them as a gap. Same isolation the
+    # `log-time-from-the-name` case needs for logs, one level over: the case
+    # needs a receipt set it owns, or the fixture's own history decides the
+    # answer. Restored after.
+    _un_keep = {}
+    for _p in list(_rdir.glob("*.json")):
+        _un_keep[_p.name] = _p.read_text(encoding="utf-8")
+        _p.unlink()
+    (_un / "2026-09-20-10-00_aiden_before-the-mechanism-a.md").write_text(
+        "---\ntype: session-log\n---\n", encoding="utf-8")
+    (_un / "2026-09-20-11-00_aiden_before-the-mechanism-b.md").write_text(
+        "---\ntype: session-log\n---\n", encoding="utf-8")
+    (_un / "2026-09-26-21-12_aiden_after-the-mechanism.md").write_text(
+        "---\ntype: session-log\n---\n", encoding="utf-8")
+    (_un / "not-a-dated-name.md").write_text(
+        "---\ntype: session-log\n---\n", encoding="utf-8")
+    # the receipted session: started 09-26 19:49 local, so the line is drawn
+    # between `before-the-mechanism-b` (11:00) and `after-the-mechanism` (21:12)
+    _un_sj.write_text(json.dumps({"schema": 1, "session_id": "un-date-me",
+                                  "started": "2026-09-27T00:49:22Z",
+                                  "id_source": "host hook payload"}), encoding="utf-8")
+    _un_log = ("06 AI Team/AI Team Knowledge/Session Logs/2026/09/"
+               "2026-09-26-19-49_aiden_the-receipted-one.md")
+    (_un / "2026-09-26-19-49_aiden_the-receipted-one.md").write_text(
+        "---\ntype: session-log\n---\n", encoding="utf-8")
+    expect_ok("checkpoint/unpinned-split-seeds-the-line",
+              _wr("--session-id", "un-date-me", "--output", _un_log))
+    checks += 1
+    try:
+        _r = subprocess.run([PY, str(HERE / "checkpoint.py"), str(cpv), "--json"],
+                            capture_output=True, text=True)
+        _u = json.loads(_r.stdout)["unpinned_logs"]
+        _pre = [os.path.basename(p) for p in _u["pre_mechanism"]]
+        _unexp = [os.path.basename(p) for p in _u["unexplained"]]
+        _undated = [os.path.basename(p) for p in _u["undated"]]
+        if sorted(_pre) != ["2026-09-20-10-00_aiden_before-the-mechanism-a.md",
+                            "2026-09-20-11-00_aiden_before-the-mechanism-b.md"]:
+            fails.append("checkpoint/unpinned-logs-dated: the pre-mechanism "
+                         "bucket is wrong (%s); a log older than the first "
+                         "receipt is expected and must not be flagged" % _pre)
+        if _unexp != ["2026-09-26-21-12_aiden_after-the-mechanism.md"]:
+            fails.append("checkpoint/unpinned-logs-dated: the unexplained "
+                         "bucket is wrong (%s); the one log AFTER the first "
+                         "receipt is the genuine gap and is the only thing "
+                         "worth flagging" % _unexp)
+        if _undated != ["not-a-dated-name.md"]:
+            fails.append("checkpoint/unpinned-logs-dated: a log whose name "
+                         "carries no timestamp must be reported as undated "
+                         "rather than silently counted on either side (%s)"
+                         % _undated)
+        # The receipts written above are on disk; the seeded session itself is
+        # a real log now, so it must NOT appear in any bucket.
+        _all = _pre + _unexp + _undated
+        if "2026-09-26-19-49_aiden_the-receipted-one.md" in _all:
+            fails.append("checkpoint/unpinned-logs-dated: a log a receipt pins "
+                         "was reported as unpinned")
+    except Exception as e:
+        fails.append("checkpoint/unpinned-logs-dated: report unreadable (%s)" % e)
+    for _stale in _un.glob("*.md"):
+        _stale.unlink()
+    (_rdir / "un-date-me.json").unlink(missing_ok=True)
+    # Put the cleared receipts back, so the cases after this one see the
+    # fixture as they expect it.
+    for _name, _txt in _un_keep.items():
+        (_rdir / _name).write_text(_txt, encoding="utf-8")
+    _un_sj.write_text(_un_sj_text, encoding="utf-8")
+
+    # 6d9. THE HOST'S OWN SESSION ID MUST BE USED, AND THE SLOT MUST BE
+    #      USABLE ONLY BY ITS WRITER (ruling 2026-09-30, changes 1 and 2).
+    #      Measured before: `HERMES_SESSION_ID` was populated on every Hermes
+    #      session and NO script read it, so the ritual always minted a fresh
+    #      `local-...`, the slot stayed last-writer-wins, and every bare
+    #      checkpoint's window was another session's start. Worse, the old
+    #      refusal was keyed on the slot's `id_source` (`"minted here"`), so a
+    #      HOST id in the slot let a different session's bare checkpoint file a
+    #      receipt under that other session's id — exit 0, no warning.
+    _v9 = tmp / "host-id-vault"
+    shutil.copytree(ROOT, _v9, ignore=fixture_ignore(".git"))
+    _v9_scripts = _v9 / "06 AI Team/AI Team Knowledge/Scripts"
+    _v9_logs = _v9 / "06 AI Team/AI Team Knowledge/Session Logs/2026/09"
+    _v9_logs.mkdir(parents=True, exist_ok=True)
+    for _s in _v9_logs.glob("*.md"):
+        _s.unlink()
+    _v9_rdir = _v9 / ".mypka/state/receipts"
+    _v9_rdir.mkdir(parents=True, exist_ok=True)
+    for _s in _v9_rdir.glob("*.json"):
+        _s.unlink()
+    _v9_sj = _v9 / ".mypka/state/session.json"
+    (_v9_logs / "2026-09-29-10-00_aiden_v9-a.md").write_text(
+        "---\ntype: session-log\n---\n", encoding="utf-8")
+    # A. the host variable is read, and the window comes from the ID, not the
+    #    slot: the slot's `started` is deliberately a different instant.
+    _v9_sj.write_text(json.dumps({
+        "schema": 1, "session_id": "20260929_110000_bbbbbb",
+        "started": "2026-09-29T16:00:00Z", "id_source": "host hook payload"},
+        indent=2) + "\n", encoding="utf-8")
+    _r = subprocess.run(
+        [PY, str(_v9_scripts / "checkpoint.py"), str(_v9),
+         "--write-receipt",
+         "--output", "06 AI Team/AI Team Knowledge/Session Logs/2026/09/"
+                     "2026-09-29-10-00_aiden_v9-a.md"],
+        capture_output=True, text=True,
+        env=fixture_env(HERMES_SESSION_ID="20260929_095900_aaaaaa"))
+    checks += 1
+    _rec9 = _v9_rdir / "20260929_095900_aaaaaa.json"
+    if _r.returncode != 0:
+        fails.append("checkpoint/host-id-is-read: exit %d, expected 0 (%s)"
+                     % (_r.returncode, (_r.stderr or "").strip()[:200]))
+    elif not _rec9.is_file():
+        fails.append("checkpoint/host-id-is-read: no receipt for the HOST id; "
+                     "HERMES_SESSION_ID was not read as a session id")
+    else:
+        try:
+            _d9 = json.loads(_rec9.read_text(encoding="utf-8"))
+            # 09:59:00 local == 14:59:00Z. The slot says 16:00:00Z, so a window
+            # off the slot is the bug this asserts against.
+            if not str(_d9.get("started", "")).startswith("2026-09-29T14:59"):
+                fails.append("checkpoint/host-id-is-read: `started` is %s; it "
+                             "must be derived from this session's OWN id "
+                             "(2026-09-29T14:59:00Z), not borrowed from the "
+                             "slot (2026-09-29T16:00:00Z)" % _d9.get("started"))
+            if _d9.get("session_id_source") != "HERMES_SESSION_ID":
+                fails.append("checkpoint/host-id-is-read: session_id_source is "
+                             "%r, expected 'HERMES_SESSION_ID'"
+                             % _d9.get("session_id_source"))
+        except Exception as e:
+            fails.append("checkpoint/host-id-is-read: receipt unreadable (%s)" % e)
+    # B. A HOOK-WRITTEN SLOT IS STILL A LEGITIMATE ID SOURCE when the caller
+    #    names nothing — that is the design for a host that writes the slot but
+    #    exports no variable. Refusing it broke the `receipt-*-control` cases
+    #    and `session-start/names-the-last-receipt` when this change first went
+    #    in (measured 2026-09-30), which is why it is asserted here as a CONTROL
+    #    and not as a hole. What closes the ambiguity is change 1: a host that
+    #    exports HERMES_SESSION_ID gives every session its own id, so the slot
+    #    is never consulted on that host at all.
+    _rec9.unlink(missing_ok=True)
+    (_v9_logs / "2026-09-29-10-30_aiden_v9-anon.md").write_text(
+        "---\ntype: session-log\n---\n", encoding="utf-8")
+    _anon_log = ("06 AI Team/AI Team Knowledge/Session Logs/2026/09/"
+                 "2026-09-29-10-30_aiden_v9-anon.md")
+    _hostslot = _v9_rdir / "20260929_110000_bbbbbb.json"
+    expect_ok("checkpoint/hook-written-slot-is-used-when-unnamed",
+              [str(_v9_scripts / "checkpoint.py"), str(_v9), "--write-receipt",
+               "--output", _anon_log],
+              env=fixture_env())
+    checks += 1
+    if not _hostslot.is_file():
+        fails.append("checkpoint/hook-written-slot-is-used-when-unnamed: the "
+                     "slot's id was not used for a caller that named nothing, "
+                     "so a host that writes the slot and exports no variable "
+                     "has no id source at all")
+    # C. a MINTED slot is still refused for a caller that names nothing — that
+    #    id is a guess about THIS caller, and the host sent no id at all.
+    (_v9_sj).write_text(json.dumps({
+        "schema": 1, "session_id": "local-deadbeef0001",
+        "started": "2026-09-29T16:00:00Z",
+        "id_source": "minted here (the host sent no session id)"},
+        indent=2) + "\n", encoding="utf-8")
+    expect_refusal("checkpoint/minted-slot-still-refused-when-unnamed",
+                   [str(_v9_scripts / "checkpoint.py"), str(_v9), "--write-receipt",
+                    "--output", _anon_log],
+                   env=fixture_env(), unchanged=[_v9_sj])
+    checks += 1
+    if (_v9_rdir / "local-deadbeef0001.json").is_file():
+        fails.append("checkpoint/minted-slot-still-refused-when-unnamed: a "
+                     "receipt was written under a MINTED slot id by a caller "
+                     "that did not name it")
+    # D. the overlap list is DERIVED. A receipt that overlaps this session's
+    #    window must be named; one that closed before it must not.
+    _ov = tmp / "overlap-vault"
+    shutil.copytree(ROOT, _ov, ignore=fixture_ignore(".git"))
+    _ov_s = _ov / "06 AI Team/AI Team Knowledge/Scripts"
+    _ov_logs = _ov / "06 AI Team/AI Team Knowledge/Session Logs/2026/09"
+    _ov_logs.mkdir(parents=True, exist_ok=True)
+    for _s in _ov_logs.glob("*.md"):
+        _s.unlink()
+    _ov_rdir = _ov / ".mypka/state/receipts"
+    _ov_rdir.mkdir(parents=True, exist_ok=True)
+    for _s in _ov_rdir.glob("*.json"):
+        _s.unlink()
+    (_ov_logs / "2026-09-29-10-00_aiden_ov-me.md").write_text(
+        "---\ntype: session-log\n---\n", encoding="utf-8")
+    (_ov_logs / "2026-09-29-10-30_aiden_ov-live.md").write_text(
+        "---\ntype: session-log\n---\n", encoding="utf-8")
+    (_ov_logs / "2026-09-29-05-00_aiden_ov-past.md").write_text(
+        "---\ntype: session-log\n---\n", encoding="utf-8")
+    _ov_sj = _ov / ".mypka/state/session.json"
+    _ov_sj.write_text(json.dumps({
+        "schema": 1, "session_id": "20260929_100000_aaaaaa",
+        "started": "2026-09-29T15:00:00Z", "id_source": "host hook payload"},
+        indent=2) + "\n", encoding="utf-8")
+    # a sibling receipt overlapping 10:00-11:00, and one that closed before it
+    (_ov_rdir / "20260929_103000_live00.json").write_text(json.dumps({
+        "schema": 1, "workflow": "WS-1005", "session_id": "20260929_103000_live00",
+        "started": "2026-09-29T15:30:00Z", "finished": "2026-09-29T16:00:00Z",
+        "outputs": {"06 AI Team/AI Team Knowledge/Session Logs/2026/09/"
+                    "2026-09-29-10-30_aiden_ov-live.md": "x"},
+        "unresolved": []}, indent=2) + "\n", encoding="utf-8")
+    (_ov_rdir / "20260929_050000_past00.json").write_text(json.dumps({
+        "schema": 1, "workflow": "WS-1005", "session_id": "20260929_050000_past00",
+        "started": "2026-09-29T10:00:00Z", "finished": "2026-09-29T10:30:00Z",
+        "outputs": {"06 AI Team/AI Team Knowledge/Session Logs/2026/09/"
+                    "2026-09-29-05-00_aiden_ov-past.md": "x"},
+        "unresolved": []}, indent=2) + "\n", encoding="utf-8")
+    checks += 1
+    try:
+        _r2 = subprocess.run([PY, str(_ov_s / "checkpoint.py"), str(_ov), "--json"],
+                             capture_output=True, text=True, env=fixture_env())
+        _ovr = json.loads(_r2.stdout)["overlapped_sessions"]
+        _ids = sorted(o["session_id"] for o in (_ovr or []))
+        if _ids != ["20260929_103000_live00"]:
+            fails.append("checkpoint/overlap-is-derived: overlapped_sessions is "
+                         "%s; the receipt inside this session's window must be "
+                         "named and the one that closed before it must not"
+                         % _ids)
+    except Exception as e:
+        fails.append("checkpoint/overlap-is-derived: report unreadable (%s)" % e)
+
+    # 6d7. BEFORE A RECEIPT IS REMOVED, CHECK WHAT IT PINS (task 2026-09-29-
+    #      receipt-repair-refused-by-own-guard, defect 1). The 15:46 session
+    #      deleted a receipt because the id was minted and absent from
+    #      session.json. Neither fact is evidence about the file; the evidence
+    #      is a session log that only that receipt pins. This is the check the
+    #      delete decision did not run.
+    _sidD = "local-0123456789ab"
+    _logD = ("06 AI Team/AI Team Knowledge/Session Logs/2026/09/"
+             "2026-09-29-16-30_aiden_only-claim.md")
+    (cpv / _logD).write_text("# session D\n", encoding="utf-8")
+    _sj.write_text(json.dumps({"schema": 1, "session_id": _sidD,
+                               "started": "2026-09-29T20:12:51Z",
+                               "id_source": "minted here (the host sent no session id)"}),
+                   encoding="utf-8")
+    expect_ok("checkpoint/removing-seeds-the-receipt",
+              _wr("--session-id", _sidD, "--output", _logD))
+    expect_refusal("checkpoint/removing-refuses-an-orphaned-log",
+                   [str(HERE / "checkpoint.py"), str(cpv), "--removing", _sidD],
+                   unchanged=[_rdir / (_sidD + ".json")])
+    # a receipt whose log nothing else pins cannot be deleted...
+    # ...but a DUPLICATE (another receipt also pins the same log) may go
+    expect_ok("checkpoint/removing-seeds-the-duplicate",
+              _wr("--session-id", "local-dup0000001", "--output", _logD))
+    expect_ok("checkpoint/removing-allows-a-duplicate",
+              [str(HERE / "checkpoint.py"), str(cpv), "--removing", "local-dup0000001"])
+    # an unreadable receipt is not removable either
+    (_rdir / "local-broken.json").write_text("{not json", encoding="utf-8")
+    expect_refusal("checkpoint/removing-refuses-an-unreadable-receipt",
+                   [str(HERE / "checkpoint.py"), str(cpv), "--removing", "local-broken"])
+    for _extra in (_sidD + ".json", "local-dup0000001.json", "local-broken.json"):
+        (_rdir / _extra).unlink(missing_ok=True)
+    (cpv / _logD).unlink(missing_ok=True)
+    (cpv / _logA).unlink(missing_ok=True)
+    (cpv / _logB).unlink(missing_ok=True)
+    (cpv / _logC).unlink(missing_ok=True)
+    _sj.write_text(_sj_text, encoding="utf-8")
+
+    # 6e below reads the NEWEST receipt and expects the fixture's own session;
+    # the cases above wrote newer ones. Remove theirs so this block leaves the
+    # fixture exactly as 6e expects to find it.
+    for _extra in ("other-session.json", "local-minted01.json", _hid + ".json"):
+        if (_rdir / _extra).is_file():
+            (_rdir / _extra).unlink()
+    _keep = _rdir / "red-test-session.json"
+    if _keep.is_file():
+        os.utime(_keep, None)
+
     # 6e. THE START RITUAL MUST POINT AT THE RECEIPT (pilot B finding F6).
     #     The receipt carries the machine-readable answer to "what did the
     #     last session do" and nothing told a resuming session it existed, so
@@ -1177,7 +1914,7 @@ with tempfile.TemporaryDirectory() as td:
                  "--title", "t", "--assignee", "penn"])
     # 11. new-session-log must reject a bad slug
     expect_fail("new-session-log/bad-slug",
-                [str(HERE / "new-session-log.py"), "--agent", "larry", "--slug", "Bad Slug"])
+                [str(HERE / "new-session-log.py"), "--agent", "aiden", "--slug", "Bad Slug"])
     # 12. import-file must reject a destination outside the six rooms
     srcf = tmp / "note.md"; srcf.write_text("hello\n")
     expect_fail("import-file/dest-outside-rooms",
@@ -1535,6 +2272,63 @@ with tempfile.TemporaryDirectory() as td:
                     "[[Knowledge Management]]", "--set", "note_type=Outline"] + R)
     expect_refusal("new-entity/project-without-a-goal",
                    [str(ne), "project", "Goalless"] + R)
+    expect_refusal("new-entity/document-without-a-link",
+                   [str(ne), "document", "Unfiled Receipt",
+                    "--set", "doc_type=receipt",
+                    "--set", "source_file=[[scan.pdf]]"] + R)
+    # 42d. a DONATION without its project must be refused even when it links
+    #      the donor and the recipient: the `projects` link is what carries the
+    #      tax kind (charitable vs political, never both) and what the
+    #      Documents.base donation views select on, so a people/companies link
+    #      must not save it. This is the hole the earlier writer fix left open.
+    seed(ent, "project", "Donation Tracker", "04 Inner World/My Life/Projects",
+         status="active", goal="[[P8P Property Tax Litigation TY2024 & TY2025]]")
+    expect_refusal("new-entity/donation-without-its-project",
+                   [str(ne), "document", "Unfiled Donation",
+                    "--link", "[[Some Company]]",
+                    "--set", "tags=donation",
+                    "--set", "doc_type=receipt",
+                    "--set", "source_file=[[donation.pdf]]"] + R)
+    # the control: the same donation with its project linked must still create,
+    # or the refusal above proves only that the guard refuses every donation.
+    checks += 1
+    r = subprocess.run([PY, str(ne), "document", "Filed Donation",
+                        "--link", "[[Donation Tracker]]",
+                        "--set", "tags=donation",
+                        "--set", "doc_type=receipt",
+                        "--set", "source_file=[[filed-donation.pdf]]"] + R,
+                       capture_output=True, text=True)
+    ddoc = ent / "04 Inner World/Notes/Filed Donation.md"
+    if r.returncode != 0 or not ddoc.is_file():
+        fails.append("new-entity/donation-with-its-project-control: refused a "
+                     "donation linked to its project (exit %d): %s"
+                     % (r.returncode, (r.stderr or r.stdout or "").strip()[:200]))
+    # 42c. the control for the document guard: a document filed for a contact
+    #      (people/companies) and one linked to a topic must still create, or
+    #      the refusal above proves only that the guard refuses everything.
+    seed(ent, "company", "Some Company", "04 Inner World/Contacts/Companies")
+    checks += 1
+    r = subprocess.run([PY, str(ne), "document", "Contact Receipt",
+                        "--link", "[[Some Company]]",
+                        "--set", "doc_type=receipt",
+                        "--set", "source_file=[[contact-receipt.pdf]]"] + R,
+                       capture_output=True, text=True)
+    cdoc = ent / "04 Inner World/Notes/Contact Receipt.md"
+    if r.returncode != 0 or not cdoc.is_file():
+        fails.append("new-entity/document-contact-control: refused a document "
+                     "linked to a contact (exit %d): %s"
+                     % (r.returncode, (r.stderr or r.stdout or "").strip()[:200]))
+    checks += 1
+    r = subprocess.run([PY, str(ne), "document", "Topic Receipt",
+                        "--link", "[[Knowledge Management]]",
+                        "--set", "doc_type=receipt",
+                        "--set", "source_file=[[topic-receipt.pdf]]"] + R,
+                       capture_output=True, text=True)
+    tdoc = ent / "04 Inner World/Notes/Topic Receipt.md"
+    if r.returncode != 0 or not tdoc.is_file():
+        fails.append("new-entity/document-topic-control: refused a document "
+                     "linked to a topic (exit %d): %s"
+                     % (r.returncode, (r.stderr or r.stdout or "").strip()[:200]))
     # 42b. the control: a good creation must PASS and must land a note that
     #      validate-scaffold and check-bases both still accept, or the reds
     #      above prove only that the script refuses everything.
@@ -1580,6 +2374,32 @@ with tempfile.TemporaryDirectory() as td:
                        capture_output=True, text=True)
     if r.returncode != 0:
         fails.append("find-entity/alias-found: an alias in `aliases` did not resolve")
+    # 43b2. a PARTIAL name for an entity that exists must not read as a clean
+    #      absence: exit 2 is "create it", and a bare `Rivera` for Alex Rivera
+    #      is how a duplicate gets made. It must surface the candidate, exit 1,
+    #      and never report it as a hit.
+    checks += 1
+    r = subprocess.run([PY, str(fe), "Rivera"] + R, capture_output=True, text=True)
+    try:
+        _rep = _json.loads(r.stdout)
+    except Exception as e:
+        _rep = None
+        fails.append(f"find-entity/partial-name: report unreadable ({e})")
+    if _rep is not None:
+        if r.returncode == 2 or not _rep.get("candidates"):
+            fails.append("find-entity/partial-name: a partial name for an existing "
+                         f"entity came back as a clean absence (exit {r.returncode}), "
+                         "which invites a duplicate")
+        elif r.returncode != 1 or _rep.get("count") != 0:
+            fails.append("find-entity/partial-name: a near miss must exit 1 with "
+                         f"count 0, not a hit (exit {r.returncode})")
+    # 43b3. and the control: a name close to nothing is still a clean create,
+    #      or the guard above simply refuses every create.
+    checks += 1
+    r = subprocess.run([PY, str(fe), "Zzyzx Quux"] + R, capture_output=True, text=True)
+    if r.returncode != 2:
+        fails.append("find-entity/absent-clean-control: a name matching nothing "
+                     f"must still exit 2 (got {r.returncode})")
     # 43c. its refusals
     expect_refusal("find-entity/no-name", [str(fe), "   "] + R)
     expect_refusal("find-entity/unknown-type", [str(fe), "Alex", "--type", "widget"] + R)
@@ -1808,11 +2628,34 @@ with tempfile.TemporaryDirectory() as td:
 
     # The live vault, for the operator, as information. Never a pass or a
     # fail: this suite tests the scripts, and a member's vault is not a script.
+    #
+    # READ THIS LINE FOR WHAT IT MEASURES, NOT FOR WHAT IT LOOKS LIKE. In mode B
+    # `ROOT` is the STAGED MERGE in a temp folder, not the member's vault, and
+    # the staging strips 05 Assets/ (`_heavy` at the top of this file). A
+    # check-quality run then reports documents_without_file = every wrapper in
+    # the vault (261 here) against a `broken` threshold of 10, so the line reads
+    # `broken` on a perfectly healthy vault — the finding is the fixture's
+    # shape. Measured 2026-09-30: the real content source reads `attention`,
+    # while this staged tree reads `broken`. To read the member's actual health,
+    # run check-quality.py against the content source root (the binding's
+    # `life` source, `LIFE_ROOT` below), not against this note.
     r = subprocess.run([PY, str(cq), str(ROOT), "--json"], capture_output=True, text=True)
     try:
-        print("NOTE live vault health (%s): %s" % (ROOT.name, _json.loads(r.stdout)["health"]))
+        print("NOTE live vault health (%s): %s — for the STAGED tree; run "
+              "check-quality.py against the content source for the vault's own "
+              "health (see the comment above)"
+              % (ROOT.name, _json.loads(r.stdout)["health"]))
     except Exception:
-        print("NOTE live vault health: could not be read (this decides nothing)")
+        try:
+            # check-quality.py writes its refusal to ONE of the two streams
+            # depending on how it exits, so read both before saying "no output".
+            _why = (r.stdout.strip() or r.stderr.strip() or "no output")
+            print("NOTE live vault health (%s): the staged tree is not a scaffold "
+                  "root (%s), so there is nothing to report here; the content "
+                  "source is %s"
+                  % (ROOT.name, _why.splitlines()[0][:80], LIFE_ROOT))
+        except Exception:
+            print("NOTE live vault health: could not be read (this decides nothing)")
 
     # 48-51. validate-scaffold checks 12 and 13: the by-hand path in GL-1007
     #     tells the member to run Templates: Insert template and to fill the
@@ -2429,9 +3272,7 @@ with tempfile.TemporaryDirectory() as td:
     checks += 1
     ss = tmp / "session-start-vault"
     shutil.copytree(ROOT, ss, ignore=fixture_ignore(".git"))
-    env = dict(_o.environ)
-    env["CLAUDE_PROJECT_DIR"] = str(ss)
-    env.pop("ICOR_SESSION_ID", None)
+    env = fixture_env(CLAUDE_PROJECT_DIR=str(ss))
     r = subprocess.run(
         [PY, str(ss / "06 AI Team/AI Team Knowledge/Scripts/session-start.py")],
         capture_output=True, text=True, env=env,
@@ -2467,9 +3308,7 @@ with tempfile.TemporaryDirectory() as td:
     checks += 1
     ss2 = tmp / "session-start-noid"
     shutil.copytree(ROOT, ss2, ignore=fixture_ignore(".git"))
-    env = dict(_o.environ)
-    env["CLAUDE_PROJECT_DIR"] = str(ss2)
-    env.pop("ICOR_SESSION_ID", None)
+    env = fixture_env(CLAUDE_PROJECT_DIR=str(ss2))
     r = subprocess.run([PY, str(ss2 / "06 AI Team/AI Team Knowledge/Scripts/session-start.py")],
                        capture_output=True, text=True, env=env, input="")
     if "GUARDS:" not in r.stdout:
@@ -2648,8 +3487,7 @@ with tempfile.TemporaryDirectory() as td:
     def cp(name, args, expect):
         global checks
         checks += 1
-        env = dict(_o.environ)
-        env.pop("ICOR_SESSION_ID", None)
+        env = fixture_env()
         r = subprocess.run([PY, str(CP), str(rv)] + args, capture_output=True,
                            text=True, env=env)
         if r.returncode != expect:
@@ -2688,6 +3526,12 @@ with tempfile.TemporaryDirectory() as td:
     cp("receipt-output-changed", ["--assert-logged"], 1)
     logfile.write_text("# log\n", encoding="utf-8")
     # a receipt that names no session log: refuse
+    #
+    # A FRESH id, because the guard now asks about the session LOG: a second
+    # write under `sess-morning`, whose receipt already names `logrel`, would be
+    # refused as a different session's log — correct behaviour, but it would
+    # test the new guard instead of the no-log assert this case is about.
+    sess("sess-nolog")
     cp("receipt-no-log-among-outputs", ["--write-receipt", "--output", "AGENTS.md"], 0)
     cp("receipt-without-a-session-log", ["--assert-logged"], 1)
 
@@ -5097,9 +5941,7 @@ with tempfile.TemporaryDirectory() as _b9std:
         "runpy.run_path(sys.argv[0], run_name='__main__')\n", encoding="utf-8")
     _ssv9 = fixture_vault(_b9s, "session-start-no-select")
     checks += 1
-    _env9 = dict(os.environ)
-    _env9["CLAUDE_PROJECT_DIR"] = str(_ssv9)
-    _env9.pop("ICOR_SESSION_ID", None)
+    _env9 = fixture_env(CLAUDE_PROJECT_DIR=str(_ssv9))
     _sr9 = subprocess.run(
         [PY, str(_noselect9),
          str(_ssv9 / "06 AI Team/AI Team Knowledge/Scripts/session-start.py")],
@@ -5876,7 +6718,8 @@ else:
         _ce = dict(_mo.environ)
         _ce["CLAUDE_PROJECT_DIR"] = str(_sv)
         _ce["PYTHONDONTWRITEBYTECODE"] = "1"
-        _ce.pop("ICOR_SESSION_ID", None)
+        for _v in SESSION_ID_ENV:
+            _ce.pop(_v, None)
         _cr = subprocess.run([PY, str(_scripts / "session-start.py")],
                              capture_output=True, text=True, env=_ce, input="")
         if "isolated=1" not in (_cr.stdout or ""):
@@ -7747,6 +8590,17 @@ def _s12_expect(out, label, r, code, needle=None, stream="stderr"):
         out.append("%s: exit %d as expected, but %r is not in its output: %s" % (label, code, needle, got.strip()[-200:]))
     if "Traceback" in (r.stderr or ""):
         out.append("%s: crashed with a traceback instead of a FAIL line" % label)
+    # A REFUSAL THE CASE DID NOT ASK FOR is named, with the updater's own reason.
+    # mypka-update.py exits 1 with `REFUSED …` for every one of its guards, and
+    # many cases here expect exactly that — so this fires ONLY when the case
+    # wanted success (`code == 0`) and got a refusal. That is the signature of a
+    # stale working tree: T7's release fixture took its hashes from an installed
+    # manifest that no longer matched the live bytes, and reported a refusal with
+    # nothing to do with the code under test. Quoting the reason is what tells an
+    # author which of the two they are looking at.
+    if code == 0 and r.returncode == 1 and "REFUSED" in ((r.stderr or "") + (r.stdout or "")):
+        out.append("%s: mypka-update REFUSED a run that expected success: %s"
+                   % (label, (r.stderr or r.stdout).strip()[:400]))
 
 
 def _s12_set_id(text, value):
@@ -8128,6 +8982,77 @@ def s12_up_edited(muts):
         out.append("06 AI Team/B.md.update is missing or does not hold the new version")
     if "KEPT" not in r.stdout:
         out.append("no KEPT report line")
+    return out
+
+
+def _s12_moved_pin(tag, rebuild):
+    """A member-edited shipped file whose installed pin EQUALS the live bytes —
+    the moved-pin state `build-mypka-manifest.py` creates after a rebuild, and
+    the exact shape every existing updater fixture is the INVERSE of (they pin
+    each file to its own live bytes and edit the working tree). Returns the
+    target and the release, ready to run against.
+
+    The target is a git checkout (like the real team root): the shipped bytes
+    are committed at HEAD, then the working tree is edited. `git show HEAD:` is
+    the shipped baseline the guard reads, and it only exists under git.
+
+    rebuild=True  the installed pin is the member's edited bytes (as if the
+                  rebuild had recomputed it from the working tree), while the
+                  release ships DIFFERENT bytes.
+    rebuild=False the installed pin stays the shipped bytes (no rebuild), the
+                  working tree is the member's edit — the existing rule-3
+                  protection, asserted so the new branch cannot regress it.
+    """
+    shipped = b"shipped bytes\n"
+    edited = b"shipped bytes\n# member edit\n"
+    newver = b"the new upstream version\n"
+    v1 = _s12_release(tag + "-v1", "1.0.0", {"06 AI Team/B.md": shipped})
+    t = _s12_install(tag, v1)
+    _s12_git(t, "init", "-q")
+    _s12_git(t, "add", "-A")
+    _s12_git(t, "commit", "-q", "-m", "shipped")
+    (t / "06 AI Team/B.md").write_bytes(edited)
+    if rebuild:
+        m = _r_json(t / ".mypka/manifest.json") or {}
+        m["files"]["06 AI Team/B.md"] = _s12_hash(edited)
+        (t / ".mypka/manifest.json").write_text(json.dumps(m), encoding="utf-8")
+    v2 = _s12_release(tag + "-v2", "1.1.0", {"06 AI Team/B.md": newver})
+    return t, v2
+
+
+def s12_up_moved_pin(muts):
+    """Moved-pin guard, direction (b): an installed pin that EQUALS the live
+    bytes while the release ships different bytes is `kept+upd` — the member's
+    bytes survive --live and upstream is staged as <file>.update — NEVER an
+    `update` overwrite. This is the state a routine manifest rebuild creates,
+    and the one no existing fixture can see (they all pin to the shipped bytes).
+    """
+    out = []
+    t, v2 = _s12_moved_pin("up-moved-pin", rebuild=True)
+    r = _s12_up(muts, "up-moved-pin", v2, t, "--live")
+    _s12_expect(out, "live", r, 0, "06 AI Team/B.md.update", "stdout")
+    if "KEPT" not in r.stdout:
+        out.append("no KEPT report line for the moved pin")
+    if (t / "06 AI Team/B.md").read_bytes() != b"shipped bytes\n# member edit\n":
+        out.append("the member's edit was overwritten (the moved-pin loss reproduced)")
+    if not (t / "06 AI Team/B.md.update").is_file() or (t / "06 AI Team/B.md.update").read_bytes() != b"the new upstream version\n":
+        out.append("06 AI Team/B.md.update is missing or does not hold the new version")
+    return out
+
+
+def s12_up_moved_pin_no_rebuild(muts):
+    """The same edit WITHOUT the rebuild (pin == shipped) is still `kept+upd`,
+    so the moved-pin branch cannot regress the existing rule-3 protection."""
+    out = []
+    t, v2 = _s12_moved_pin("up-moved-pin-norebuild", rebuild=False)
+    r = _s12_up(muts, "up-moved-pin-norebuild", v2, t, "--live")
+    _s12_expect(out, "live", r, 0, "06 AI Team/B.md.update", "stdout")
+    if "KEPT" not in r.stdout:
+        out.append("no KEPT report line for the un-rebuilt edit")
+    if (t / "06 AI Team/B.md").read_bytes() != b"shipped bytes\n# member edit\n":
+        out.append("the member's edit was overwritten without a rebuild")
+    if not (t / "06 AI Team/B.md.update").is_file():
+        out.append("06 AI Team/B.md.update is missing without a rebuild")
     return out
 
 
@@ -9167,12 +10092,41 @@ def _s12_copy(man, base, dest, repo_only=False):
 def _s12_real_release(tag):
     """The real myPKA install set as the next patch release (6.0.0 gives
     6.0.1; the version is read, never assumed): AGENTS.md and one SOP
-    changed, README-myPKA.md retired."""
+    changed, README-myPKA.md retired.
+
+    THE RELEASE IS MADE SELF-CONSISTENT, and that is the fix for a real
+    red. `_s12_copy` copies the LIVE bytes of `_S12_TEAM`, but the hashes
+    came from the installed manifest, which is only current if somebody ran
+    `build-mypka-manifest.py` after the last edit. On a working tree with
+    uncommitted edits the two disagree, `mypka-update.py` rule 9 sees a
+    release that "does not match its manifest hash", and T7 reports
+    `REFUSED the release cannot be applied safely` — a failure with nothing
+    to do with the code under test, and red for anyone mid-edit. That is
+    precisely the class this suite exists to distinguish, so the fixture
+    re-hashes every path it copied and pins the two files it edits itself.
+    The manifest's SELF entry is the literal "self" by convention (a file
+    cannot carry its own hash), so it is left alone.
+    """
     r = _s12_dir(tag) / "R"
     _s12_copy(_S12_TMAN, _S12_TEAM, r)
     man = json.loads(json.dumps(_S12_TMAN))
     core = re.match(r"(\d+)\.(\d+)\.(\d+)", str(man.get("version")))
     nxt = "%s.%s.%d" % (core.group(1), core.group(2), int(core.group(3)) + 1)
+    # Re-hash what was actually copied, so a working tree with uncommitted
+    # edits still produces a release that matches its own manifest.
+    stale = []
+    for rel, want in list(man["files"].items()):
+        f = r / rel
+        if want == "self" or not f.is_file():
+            continue
+        got = _s12_hash(f.read_bytes())
+        if got != want:
+            stale.append(rel)
+            man["files"][rel] = got
+    if stale:
+        print("NOTE _s12_real_release(%s): %d path(s) pinned from live bytes, not from the "
+              "installed manifest (the manifest is stale next to this working tree): %s"
+              % (tag, len(stale), ", ".join(sorted(stale)[:6])), file=sys.stderr)
     sop = sorted(p for p in man["files"] if "/SOPs/SOP-10" in p)[0]
     for rel in ("AGENTS.md", sop):
         (r / rel).write_bytes((r / rel).read_bytes() + ("\nA line added in %s.\n" % nxt).encode())
@@ -10210,6 +11164,13 @@ _S12_CASES = [
     ("UP2b-unchanged-upstream-no-update", s12_up2b_unchanged_upstream,
      {_S12_UP: _r_mut("        elif installed and installed == want:", "        elif False:")},
      "a .update written although upstream did not change the file", ()),
+    ("UP28-moved-pin-kept-upd", s12_up_moved_pin,
+     {_S12_UP: _r_mut("            if _uncommitted_vs_head(target, rel, have):", "            if False:")},
+     "the moved-pin guard switched off", ()),
+    ("UP29-moved-pin-no-rebuild-still-kept", s12_up_moved_pin_no_rebuild,
+     {_S12_UP: _r_mut('("kept+upd", rel, "edited by you, left as is; the new version is at %s.update (the "',
+                      '("update", rel, "edited by you, left as is; the new version is at %s.update (the "')},
+     "the un-rebuilt edit no longer kept+upd", ()),
     ("UP12b-unreadable-version-refused", s12_up12b_unreadable_version,
      {_S12_UP: _r_mut("    if old and semver_key(v_old) is None and not args.allow_downgrade:", "    if False:")},
      "an unreadable installed version skips the downgrade check", ()),
@@ -10376,7 +11337,7 @@ _S12_CASES = [
      "the range row without its numbers", ()),
     ("X10-new-agent-names-no-private-doc", s12_x10_new_agent_public_text,
      {"new-agent.py": _r_mut('    print("  5. Finish the agent-index row (SOP-1007 row 12).")',
-                             '    print("  5. Finish the agent-index row, and add Larry\'s routing cheatsheet row.")')},
+                             '    print("  5. Finish the agent-index row, and add Aiden\'s routing cheatsheet row.")')},
      "the 6.0.1 cheatsheet line back", ()),
     ("X11-session-start-hides-illegal-pack-names", s12_x11_session_start_hides_illegal_names,
      {"session-start.py": _r_mut("    return v if ok.fullmatch(v) else _HIDDEN\n", "    return v\n")},
@@ -10783,6 +11744,525 @@ for _cid, _fn, _muts, _why in _S18_RB_CASES:
 shutil.rmtree(_S12_TMP, ignore_errors=True)
 # ---- END mack step12 release tooling ----
 
+# ---- BEGIN check-drift: the port-forward obligation guard ----
+# 2026-09-30. `check-drift.py` names the shipped files a member has edited, the
+# ones `mypka-update.py` rule 3 will not overwrite. It is the only guard that
+# catches a port-forward obligation BEFORE upstream happens to touch the file
+# (rule 3 stages a `.update` sidecar only then, so a sidecar-watching check
+# reports nothing on the drift that matters). The cases below are behavioural:
+# each builds a throwaway tree, runs the guard, and reads its verdict.
+_CD = HERE / "check-drift.py"
+if not _CD.is_file():
+    skip("check-drift/*", "check-drift.py is not in this Scripts folder")
+else:
+    import json as _cd_json, tempfile as _cd_tmp, shutil as _cd_sh
+
+    def _cd_tree(tmp, name, *, drift=False, sidecar=False, missing=False):
+        """A minimal ICOR-shaped tree with one shipped file per class."""
+        root = tmp / name
+        (root / ".icor-for-life").mkdir(parents=True)
+        (root / "06 AI Team").mkdir()
+        (root / ".obsidian").mkdir()
+        keep = root / "06 AI Team/keep.py"
+        seed = root / ".obsidian/workspace.json"
+        ex = root / "06 AI Team/example.md"
+        rec = root / ".icor-for-life/manifest.json"
+        keep.write_text("shipped\n", encoding="utf-8")
+        seed.write_text("mine\n", encoding="utf-8")
+        ex.write_text("mine\n", encoding="utf-8")
+        record_rel = ".icor-for-life/manifest.json"
+
+        def _h(p):
+            import hashlib
+            return hashlib.sha256(p.read_bytes()).hexdigest()
+
+        files = {"06 AI Team/keep.py": _h(keep),
+                 ".obsidian/workspace.json": "0" * 64,
+                 "06 AI Team/example.md": "0" * 64,
+                 record_rel: "0" * 64}
+        if missing:
+            files["06 AI Team/gone.md"] = "0" * 64
+        rec.write_text(_cd_json.dumps({"version": "9.9.9", "files": files,
+                                       "seed": [".obsidian/workspace.json"],
+                                       "examples": ["06 AI Team/example.md"]}), encoding="utf-8")
+        if drift:
+            keep.write_text("shipped\nedited by me\n", encoding="utf-8")
+        if sidecar:
+            (root / "06 AI Team/keep.py.update").write_text("upstream\n", encoding="utf-8")
+        return root
+
+    def _cd_run(root, *args):
+        return subprocess.run([PY, str(_CD), str(root)] + list(args),
+                              capture_output=True, text=True)
+
+    with _cd_tmp.TemporaryDirectory() as _cd_td:
+        _cd_tmpdir = Path(_cd_td)
+
+        # 1. A clean tree: the seed/example/record drift, and nothing else.
+        _v = _cd_tree(_cd_tmpdir, "clean")
+        checks += 1
+        _r = _cd_run(_v, "--json")
+        try:
+            _rep = _cd_json.loads(_r.stdout)
+            _t = _rep["trees"][0]
+            if _rep["verdict"] != "ok" or _t["edited"]:
+                fails.append("check-drift/clean-tree: a tree with no edited shipped file did not "
+                             "report ok (verdict=%r, edited=%r)" % (_rep["verdict"], _t["edited"]))
+            elif sorted(e["path"] for e in _t["excluded"]) != [
+                    ".icor-for-life/manifest.json", ".obsidian/workspace.json",
+                    "06 AI Team/example.md"]:
+                fails.append("check-drift/clean-tree: the seed/example/record classes were not "
+                             "excluded by name: %r" % _t["excluded"])
+        except Exception as e:
+            fails.append("check-drift/clean-tree: report unreadable (%s)" % e)
+
+        # 2. THE FINDING: an edited shipped file is named, and the verdict moves.
+        _v = _cd_tree(_cd_tmpdir, "drift", drift=True)
+        checks += 1
+        try:
+            _rep = _cd_json.loads(_cd_run(_v, "--json").stdout)
+            if _rep["verdict"] != "attention" or _rep["trees"][0]["edited"] != ["06 AI Team/keep.py"]:
+                fails.append("check-drift/edited-file: an edited shipped file was not the finding "
+                             "(verdict=%r, edited=%r)"
+                             % (_rep["verdict"], _rep["trees"][0]["edited"]))
+        except Exception as e:
+            fails.append("check-drift/edited-file: report unreadable (%s)" % e)
+
+        # 3. A pending sidecar is surfaced even when nothing is edited — this is
+        #    the state rule 3 produces, and the state the old plan watched for.
+        _v = _cd_tree(_cd_tmpdir, "sidecar", sidecar=True)
+        checks += 1
+        try:
+            _rep = _cd_json.loads(_cd_run(_v, "--json").stdout)
+            if _rep["trees"][0]["pending"] != ["06 AI Team/keep.py.update"]:
+                fails.append("check-drift/sidecar: a pending .update was not surfaced: %r"
+                             % _rep["trees"][0]["pending"])
+        except Exception as e:
+            fails.append("check-drift/sidecar: report unreadable (%s)" % e)
+
+        # 4. A missing shipped file is reported (rule 4 restores it), and a
+        #    folder with no manifest is refused rather than called clean.
+        _v = _cd_tree(_cd_tmpdir, "missing", missing=True)
+        checks += 1
+        try:
+            _rep = _cd_json.loads(_cd_run(_v, "--json").stdout)
+            if _rep["trees"][0]["missing"] != ["06 AI Team/gone.md"]:
+                fails.append("check-drift/missing: a missing shipped path was not reported: %r"
+                             % _rep["trees"][0]["missing"])
+        except Exception as e:
+            fails.append("check-drift/missing: report unreadable (%s)" % e)
+        _bare = _cd_tmpdir / "bare"
+        _bare.mkdir()
+        checks += 1
+        _r = _cd_run(_bare)
+        if _r.returncode == 0:
+            fails.append("check-drift/no-manifest: a folder with no manifest exited 0, so a "
+                         "non-tree reads as a green")
+
+        # 5. INTEGRATION, not a verdict: the guard must run against the live team
+        #    root and produce a parseable report over its real manifest. The
+        #    VERDICT is deliberately not asserted here. `run-red-tests.py` is
+        #    itself a shipped file, so editing it (which is what writing a guard
+        #    means) legitimately turns the team root's verdict to `attention`
+        #    until the manifest is rebuilt — asserting `ok` here would make this
+        #    case red for every author of the suite, and a control that fires on
+        #    the work it guards is the thing this guard exists to avoid. The
+        #    quiet-on-a-clean-tree invariant is case 1's fixture, which has no
+        #    working state of its own.
+        checks += 1
+        _r = _cd_run(ROOT, "--json")
+        try:
+            _rep = _cd_json.loads(_r.stdout)
+            _t = (_rep.get("trees") or [{}])[0]
+            if _t.get("product") != "mypka" or not _t.get("shipped"):
+                fails.append("check-drift/live-root-runs: the guard did not report a mypka tree "
+                             "with a shipped count on the team root (got %r)" % _t.get("product"))
+        except Exception as e:
+            fails.append("check-drift/live-root-runs: report unreadable on the team root (%s)" % e)
+
+        # 5b. AN ADDED FILE IS NOT DRIFT. A file the manifest does not list is a
+        #     new file, not an edit of a shipped one, so it must not be named.
+        _v = _cd_tree(_cd_tmpdir, "added")
+        (_v / "06 AI Team/brand-new.md").write_text("mine\n", encoding="utf-8")
+        checks += 1
+        try:
+            _rep = _cd_json.loads(_cd_run(_v, "--json").stdout)
+            if _rep["verdict"] != "ok" or _rep["trees"][0]["edited"]:
+                fails.append("check-drift/added-file: an unshipped new file was counted as drift "
+                             "(verdict=%r, edited=%r)"
+                             % (_rep["verdict"], _rep["trees"][0]["edited"]))
+        except Exception as e:
+            fails.append("check-drift/added-file: report unreadable (%s)" % e)
+
+        # 6. THE GUARD'S OWN SELF-TEST, which is what a member runs when they
+        #    doubt it. Its exit code is the check.
+        checks += 1
+        _r = subprocess.run([PY, str(_CD), "--self-test"], capture_output=True, text=True)
+        if _r.returncode != 0:
+            fails.append("check-drift/self-test: exit %d (%s)"
+                         % (_r.returncode, (_r.stdout or _r.stderr).strip().splitlines()[-1:]))
+# ---- END check-drift ----
+
+# ---- BEGIN check-wikilinks: the wikilink-resolution guard ----
+# 2026-09-30. `check-wikilinks.py` names the wikilinks that resolve to nothing
+# in ONE root. Its whole point is that the old skill-local checker resolved on
+# bare stems only and flagged hundreds of links that are not broken: a
+# cross-tree link (the target lives in the content source, not the team tree),
+# an escaped-pipe table cell, a path-style or `name.ext` target, and a
+# placeholder. Each case below builds a throwaway tree, runs the guard, and
+# reads its `--json` back — the finding, the clean control, and each exclusion
+# class BY NAME, so the guard cannot be "fixed" by excluding a class wholesale.
+_CW = HERE / "check-wikilinks.py"
+if not _CW.is_file():
+    skip("check-wikilinks/*", "check-wikilinks.py is not in this Scripts folder")
+else:
+    import json as _cw_json, tempfile as _cw_tmp, os as _cw_os
+
+    def _cw_run(root, *args):
+        return subprocess.run([PY, str(_CW), str(root)] + list(args),
+                              capture_output=True, text=True)
+
+    with _cw_tmp.TemporaryDirectory() as _cw_td:
+        _cw_dir = Path(_cw_td)
+
+        def _cw_tree(name):
+            v = _cw_dir / name
+            v.mkdir()
+            return v
+
+        def _cw_write(v, rel, body):
+            p = v / rel
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text(body, encoding="utf-8")
+            return p
+
+        def _cw_report(v, *args):
+            return _cw_json.loads(_cw_run(v, "--json", *args).stdout)
+
+        # 1. THE FINDING: a link to nothing is dangling, verdict attention.
+        _v = _cw_tree("finding")
+        _cw_write(_v, "a.md", "see [[Nope]]\n")
+        checks += 1
+        try:
+            _rep = _cw_report(_v)
+            if _rep["verdict"] != "attention" or _rep["counts"]["dangling"] != 1:
+                fails.append("check-wikilinks/finding: a link to nothing did not fire "
+                             "(verdict=%r, dangling=%r)"
+                             % (_rep["verdict"], _rep["counts"]["dangling"]))
+        except Exception as e:
+            fails.append("check-wikilinks/finding: report unreadable (%s)" % e)
+
+        # 2. THE CLEAN CONTROL: a lawful bare/alias/heading link stays silent.
+        _v = _cw_tree("clean")
+        _cw_write(_v, "Real Note.md", "# x\n")
+        _cw_write(_v, "b.md", "[[Real Note]] [[Real Note|alias]] [[Real Note#h]]\n")
+        checks += 1
+        try:
+            _rep = _cw_report(_v)
+            if _rep["verdict"] != "ok" or _rep["counts"]["dangling"] != 0:
+                fails.append("check-wikilinks/clean-control: a lawful link was flagged "
+                             "(verdict=%r)" % _rep["verdict"])
+        except Exception as e:
+            fails.append("check-wikilinks/clean-control: report unreadable (%s)" % e)
+
+        # 3. ESCAPED-PIPE TABLE CELL resolves, not dangling.
+        _v = _cw_tree("escaped-pipe")
+        _cw_write(_v, "Real Note.md", "# x\n")
+        _cw_write(_v, "c.md", "| [[Real Note\\|alias]] |\n")
+        checks += 1
+        try:
+            _rep = _cw_report(_v)
+            if _rep["counts"]["dangling"] != 0:
+                fails.append("check-wikilinks/escaped-pipe: an escaped-pipe table "
+                             "cell was flagged dangling (%r)"
+                             % _rep["counts"]["dangling"])
+        except Exception as e:
+            fails.append("check-wikilinks/escaped-pipe: report unreadable (%s)" % e)
+
+        # 4. PATH-STYLE target and .png embed resolve by path, reported under
+        #    resolved_by_path, never dangling.
+        _v = _cw_tree("path-and-embed")
+        _cw_write(_v, "sub/Deep.md", "# z\n")
+        _cw_write(_v, "Avatars/mason.png", "png", )
+        _cw_write(_v, "d.md", "[[sub/Deep]] ![[mason.png|240]]\n")
+        checks += 1
+        try:
+            _rep = _cw_report(_v)
+            if _rep["counts"]["dangling"] != 0 or \
+               _rep["counts"]["resolved_by_path"] != 2:
+                fails.append("check-wikilinks/path-and-embed: a path-style or "
+                             ".png target was not resolved by path (dangling=%r, "
+                             "resolved_by_path=%r)"
+                             % (_rep["counts"]["dangling"],
+                                _rep["counts"]["resolved_by_path"]))
+        except Exception as e:
+            fails.append("check-wikilinks/path-and-embed: report unreadable (%s)" % e)
+
+        # 5. A path-style target that does NOT exist IS a real dangling.
+        _v = _cw_tree("bad-path")
+        _cw_write(_v, "e.md", "[[sub/No Such]]\n")
+        checks += 1
+        try:
+            _rep = _cw_report(_v)
+            if _rep["counts"]["dangling"] != 1:
+                fails.append("check-wikilinks/bad-path: a path-style target to "
+                             "nothing was not flagged (dangling=%r)"
+                             % _rep["counts"]["dangling"])
+        except Exception as e:
+            fails.append("check-wikilinks/bad-path: report unreadable (%s)" % e)
+
+        # 6. PLACEHOLDERS and a heading-only link are non_links, never dangling.
+        _v = _cw_tree("placeholders")
+        _cw_write(_v, "f.md", "[[<name>]] [[<name>.png]] [[...]] [[YYYY-MM-DD]] "
+                              "[[X]] [[#heading]]\n")
+        checks += 1
+        try:
+            _rep = _cw_report(_v)
+            if _rep["counts"]["dangling"] != 0 or _rep["counts"]["non_links"] != 6:
+                fails.append("check-wikilinks/placeholders: a placeholder or "
+                             "heading-only link was not named non_links "
+                             "(dangling=%r, non_links=%r)"
+                             % (_rep["counts"]["dangling"],
+                                _rep["counts"]["non_links"]))
+        except Exception as e:
+            fails.append("check-wikilinks/placeholders: report unreadable (%s)" % e)
+
+        # 7. A REAL CROSS-TREE LINK STILL FIRES. The guard must not be "fixed"
+        #    by excluding one tree wholesale: a link whose target is genuinely
+        #    absent from the scanned root IS dangling even though the name is a
+        #    content-room record. Here "Donation Tracker" has no note in the
+        #    scanned root, so it must dangle.
+        _v = _cw_tree("cross-tree")
+        _cw_write(_v, "g.md", "[[Donation Tracker]]\n")
+        checks += 1
+        try:
+            _rep = _cw_report(_v)
+            if _rep["counts"]["dangling"] != 1:
+                fails.append("check-wikilinks/cross-tree-fires: a link to a name "
+                             "absent from the scanned root did not dangle, so the "
+                             "guard has been gutted to exclude a tree wholesale "
+                             "(dangling=%r)" % _rep["counts"]["dangling"])
+        except Exception as e:
+            fails.append("check-wikilinks/cross-tree-fires: report unreadable (%s)" % e)
+
+        # 8. --since includes and excludes by file mtime.
+        _v = _cw_tree("since")
+        _cw_write(_v, "old.md", "[[Nope]]\n")
+        _cw_write(_v, "new.md", "[[Nope]]\n")
+        import time as _cw_time
+        _cw_os.utime(_v / "old.md", (0, 0))
+        _cw_os.utime(_v / "new.md", (_cw_time.time(), _cw_time.time()))
+        checks += 1
+        try:
+            _rep = _cw_report(_v, "--since", "2025-01-01")
+            got = {i["file"] for i in _rep["dangling"]}
+            if got != {"new.md"}:
+                fails.append("check-wikilinks/since-window: --since did not isolate "
+                             "the new file (got %r)" % got)
+        except Exception as e:
+            fails.append("check-wikilinks/since-window: report unreadable (%s)" % e)
+
+        # 9. --only-changed OUTSIDE git skips cleanly and exits 0.
+        _v = _cw_tree("only-changed-nogit")
+        _cw_write(_v, "a.md", "[[Nope]]\n")
+        checks += 1
+        _r = _cw_run(_v, "--only-changed", "--json")
+        try:
+            _rep = _cw_json.loads(_r.stdout)
+            if _r.returncode != 0 or _rep["verdict"] != "skipped" or \
+               not _rep["skipped"]:
+                fails.append("check-wikilinks/only-changed-nogit: outside git did "
+                             "not skip cleanly with a reason (exit=%d, verdict=%r)"
+                             % (_r.returncode, _rep.get("verdict")))
+        except Exception as e:
+            fails.append("check-wikilinks/only-changed-nogit: report unreadable (%s)" % e)
+
+        # 10. --only-changed INSIDE git selects the untracked (changed) file.
+        _v = _cw_tree("only-changed-git")
+        _cw_write(_v, "a.md", "[[Nope]]\n")
+        subprocess.run(["git", "-C", str(_v), "init", "-q"], check=True)
+        subprocess.run(["git", "-C", str(_v), "add", "-A"], check=True)
+        subprocess.run(["git", "-C", str(_v), "commit", "-q", "-m", "base"],
+                       check=True)
+        _cw_write(_v, "changed.md", "[[Nope]]\n")
+        checks += 1
+        try:
+            _rep = _cw_report(_v, "--only-changed")
+            if _rep["verdict"] != "attention" or \
+               "changed.md" not in {i["file"] for i in _rep["dangling"]}:
+                fails.append("check-wikilinks/only-changed-git: the untracked file "
+                             "was not selected (verdict=%r, dangling=%r)"
+                             % (_rep["verdict"], _rep["dangling"]))
+        except Exception as e:
+            fails.append("check-wikilinks/only-changed-git: report unreadable (%s)" % e)
+
+        # 11. A wrong-shaped root is refused, not reported clean.
+        _v = _cw_tree("not-a-dir")
+        _f = _v / "file.txt"
+        _f.write_text("x\n")
+        checks += 1
+        _r = _cw_run(_f, "--json")
+        if _r.returncode == 0:
+            fails.append("check-wikilinks/wrong-root: a non-folder root exited 0, "
+                         "so a wrong root reads as a clean report")
+
+        # 12. --also-root splits "absent from the primary" into cross_tree
+        #     (resolves only in the second root) and dangling (resolves in
+        #     neither), while a target in the primary stays silent.
+        _v = _cw_tree("also-root")
+        _cw_write(_v, "Real Note.md", "# x\n")
+        _cw_write(_v, "h.md", "[[Real Note]] [[Other Vault Note]] [[Nowhere]]\n")
+        _alt = _cw_dir / "also-alt"
+        _alt.mkdir()
+        (_alt / "Other Vault Note.md").write_text("# o\n", encoding="utf-8")
+        checks += 1
+        try:
+            _rep = _cw_report(_v, "--also-root", str(_alt))
+            _tgt = {i["target"]: i for i in _rep["dangling"]}
+            _xtgt = [i["target"] for i in _rep["cross_tree"]]
+            if "Other Vault Note" in _tgt:
+                fails.append("check-wikilinks/also-root-cross-tree: a target that "
+                             "resolves only in the second root was flagged dangling "
+                             "instead of cross_tree")
+            if "Other Vault Note" not in _xtgt:
+                fails.append("check-wikilinks/also-root-cross-tree: a target that "
+                             "resolves only in the second root is not in cross_tree "
+                             "(cross_tree=%r)" % _xtgt)
+            if "Nowhere" not in _tgt:
+                fails.append("check-wikilinks/also-root-dangling: a target in neither "
+                             "root did not dangle (dangling=%r)" % _tgt)
+            if "Real Note" in _tgt or "Real Note" in _xtgt:
+                fails.append("check-wikilinks/also-root-primary-silent: a target in the "
+                             "primary root was reported (dangling=%r, cross_tree=%r)"
+                             % (_tgt, _xtgt))
+        except Exception as e:
+            fails.append("check-wikilinks/also-root: report unreadable (%s)" % e)
+
+        # 13. The guard's own self-test, which a member runs when they doubt it.
+        checks += 1
+        _r = subprocess.run([PY, str(_CW), "--self-test"], capture_output=True,
+                            text=True)
+        if _r.returncode != 0:
+            fails.append("check-wikilinks/self-test: exit %d (%s)"
+                         % (_r.returncode,
+                            (_r.stdout or _r.stderr).strip().splitlines()[-1:]))
+# ---- END check-wikilinks ----
+
+# ---- BEGIN checkpoint --assert-wikilinks: the scoped wikilink gate ----
+# 2026-09-30. --assert-wikilinks gates on THIS session's declared receipt
+# outputs and fails only on a link that resolves in NEITHER vault. Three
+# directions: a clean receipt passes, a receipt whose output carries a link to
+# nothing fails, and a missing guard fails-closed (never passes when it could
+# not run).
+_AW = HERE / "checkpoint.py"
+_CW2 = HERE / "check-wikilinks.py"
+if not _AW.is_file():
+    skip("checkpoint/assert-wikilinks/*", "checkpoint.py is not in this Scripts folder")
+elif not _CW2.is_file():
+    skip("checkpoint/assert-wikilinks/*", "check-wikilinks.py is not in this Scripts folder")
+else:
+    import json as _aw_json, tempfile as _aw_tmp
+
+    def _aw_receipt(v, sid, outputs):
+        """Write a minimal completion receipt for `sid` with the given outputs."""
+        _dir = v / ".mypka" / "state" / "receipts"
+        _dir.mkdir(parents=True, exist_ok=True)
+        _out = {}
+        for rel in outputs:
+            p = v / rel
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text(p.read_text(encoding="utf-8") if p.is_file()
+                         else "# out\n", encoding="utf-8")
+            import hashlib as _aw_h
+            _out[rel] = _aw_h.sha256(p.read_bytes()).hexdigest()
+        (_dir / (sid + ".json")).write_text(
+            _aw_json.dumps({"schema": 1, "workflow": "WS-1005",
+                            "session_id": sid,
+                            "session_id_source": "fixture",
+                            "started": "2026-09-30T01:00:00Z",
+                            "finished": "2026-09-30T02:00:00Z",
+                            "inputs": {}, "outputs": _out,
+                            "validator_version": "checkpoint.py/2026-09-16",
+                            "unresolved": []}, indent=2) + "\n",
+            encoding="utf-8")
+        # Give the team root a session.json so session_id() resolves the id.
+        _state = v / ".mypka" / "state"
+        _state.mkdir(parents=True, exist_ok=True)
+        (_state / "session.json").write_text(
+            _aw_json.dumps({"schema": 1, "session_id": sid,
+                            "started": "2026-09-30T01:00:00Z",
+                            "id_source": "fixture"}), encoding="utf-8")
+
+    def _aw_team_root(v):
+        """A team root with the marker and the scripts, so checkpoint.py boots."""
+        (v / "AGENTS.md").write_text("# fixture\n", encoding="utf-8")
+        (v / "06 AI Team" / "Agents").mkdir(parents=True, exist_ok=True)
+        (v / "06 AI Team" / "AI Team Knowledge" / "Scripts").mkdir(parents=True, exist_ok=True)
+        (v / "06 AI Team" / "AI Team Knowledge" / "Session Logs" / "2026" / "09").mkdir(parents=True, exist_ok=True)
+        (v / "06 AI Team" / "AI Team Knowledge" / "Tasks" / "open").mkdir(parents=True, exist_ok=True)
+        (v / "03 WiP").mkdir(exist_ok=True)
+        (v / "01 Inbox").mkdir(exist_ok=True)
+        (v / "04 Inner World").mkdir(exist_ok=True)
+        (v / "00 Daily Scratchpad").mkdir(exist_ok=True)
+        shutil.copy2(HERE / "resolve.py", v / "06 AI Team" / "AI Team Knowledge" / "Scripts" / "resolve.py")
+        shutil.copy2(_CW2, v / "06 AI Team" / "AI Team Knowledge" / "Scripts" / "check-wikilinks.py")
+        shutil.copy2(_AW, v / "06 AI Team" / "AI Team Knowledge" / "Scripts" / "checkpoint.py")
+
+    _LOG_REL = "06 AI Team/AI Team Knowledge/Session Logs/2026/09/2026-09-30-01-00_aiden_clean.md"
+    _CP = "06 AI Team/AI Team Knowledge/Scripts/checkpoint.py"
+
+    with _aw_tmp.TemporaryDirectory() as _aw_td:
+        _aw_dir = Path(_aw_td)
+
+        # 1. CLEAN CONTROL: a receipt whose output carries only lawful links passes.
+        _v = _aw_dir / "assert-wikilinks-clean"
+        _v.mkdir()
+        _aw_team_root(_v)
+        (_v / _LOG_REL).write_text(
+            "---\ntype: session-log\n---\n\n# clean\n[[Real Note]]\n", encoding="utf-8")
+        (_v / "Real Note.md").write_text("# r\n", encoding="utf-8")
+        _aw_receipt(_v, "assert-wikilinks-clean", [_LOG_REL])
+        checks += 1
+        _r = subprocess.run([PY, str(_v / _CP), str(_v), "--assert-wikilinks",
+                             "--session-id", "assert-wikilinks-clean"],
+                            capture_output=True, text=True)
+        if _r.returncode != 0:
+            fails.append("checkpoint/assert-wikilinks-clean: a receipt whose output is "
+                         "clean was refused (exit %d): %s"
+                         % (_r.returncode, (_r.stderr or _r.stdout or "").strip()[:200]))
+
+        # 2. A receipt whose output carries a link to nothing must fail.
+        _v2 = _aw_dir / "assert-wikilinks-broken"
+        shutil.copytree(_v, _v2)
+        _log2 = _v2 / _LOG_REL
+        _log2.write_text("---\ntype: session-log\n---\n\n# clean\n[[Nothing Anywhere]]\n", encoding="utf-8")
+        _aw_receipt(_v2, "assert-wikilinks-clean", [_LOG_REL])
+        checks += 1
+        _r = subprocess.run([PY, str(_v2 / _CP), str(_v2), "--assert-wikilinks",
+                             "--session-id", "assert-wikilinks-clean"],
+                            capture_output=True, text=True)
+        if _r.returncode == 0:
+            fails.append("checkpoint/assert-wikilinks-broken: a receipt whose output "
+                         "carries a link to nothing passed the gate")
+        elif "Nothing Anywhere" not in (_r.stderr or ""):
+            fails.append("checkpoint/assert-wikilinks-broken: failed, but did not name the "
+                         "broken target: %s" % (_r.stderr or "").strip()[:200])
+
+        # 3. FAIL-CLOSED: the guard script is missing, so the gate must fail, not pass.
+        _v3 = _aw_dir / "assert-wikilinks-missing-guard"
+        shutil.copytree(_v, _v3)
+        (_v3 / "06 AI Team" / "AI Team Knowledge" / "Scripts" / "check-wikilinks.py").unlink()
+        checks += 1
+        _r = subprocess.run([PY, str(_v3 / _CP), str(_v3), "--assert-wikilinks",
+                             "--session-id", "assert-wikilinks-clean"],
+                            capture_output=True, text=True)
+        if _r.returncode == 0:
+            fails.append("checkpoint/assert-wikilinks-fail-closed: the guard script was "
+                         "missing, yet the gate passed")
+        elif "check-wikilinks.py is missing" not in (_r.stderr or ""):
+            fails.append("checkpoint/assert-wikilinks-fail-closed: failed, but not for the "
+                         "missing guard: %s" % (_r.stderr or "").strip()[:200])
+# ---- END checkpoint --assert-wikilinks ----
 
 
 if fails:
