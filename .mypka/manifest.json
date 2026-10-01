@@ -2,8 +2,8 @@
   "schema": 2,
   "name": "myPKA",
   "version": "6.0.3",
-  "built": "2026-09-26T16:38:10Z",
-  "commit": "e87216d",
+  "built": "2026-10-01T15:07:57Z",
+  "commit": "fc008a6",
   "lab": false,
   "requires": "icor-concepts >=1 <2",
   "files": {
@@ -27,7 +27,7 @@
     ".codex/agents/charta.toml": "ccffcdd9251dae0f7d524545c6bcae8de217590bc8d208fb482b4fafb0bb88ed",
     ".codex/agents/flint.toml": "4428148fac9d2537f9bfddee6754107a105076829dab6f7a2b41ef9ba8bd14ef",
     ".codex/agents/iris.toml": "19417cc98158ac1261dbd774a23585ae95e7f6f9972297927f1e4c0f9a321d5c",
-    ".codex/agents/mack.toml": "f94bda0f2161b7906cea06c712436fe119f5eec4e0660902177751ac37808849",
+    ".codex/agents/mack.toml": "810e4db8b854cc003fda6d80032decd21c449756160ab5337392019158932b21",
     ".codex/agents/mason.toml": "e2c8de0f48bc9ee05c91c71959983332a55b895bdf153f7778b3fbc14086d400",
     ".codex/agents/nolan.toml": "8402bfcca06c25ef6771ffb2b0bd112d6b58d80046a4c61aa3c3f7cf4814d990",
     ".codex/agents/pax.toml": "a629f02d9993100a9dea4a2b41e874a3577310327d77e676c32eccaeb864e270",
@@ -39,7 +39,7 @@
     ".gemini/agents/charta.md": "af854eeabb28ff809ef3f345a85a6f48b3f07311ebdef3e128ece5d854e3b8d5",
     ".gemini/agents/flint.md": "98245c6cf7c72b2ed0bff6e5bc8a8e9d5b5f8759878cdd569ef66328aca31347",
     ".gemini/agents/iris.md": "fc76ea1f2a6b4c7ecac4fc8f954878365ee01f7934414bcb541ec881c8a4bb7c",
-    ".gemini/agents/mack.md": "e118762708365599bfdb9d3cebc6f818c0333816fb3e2ca54abdff49934fe79c",
+    ".gemini/agents/mack.md": "2bccfa69d1dfe87f9516c2581699429f8e2b718123ce588ede6c71e5ac2f9c85",
     ".gemini/agents/mason.md": "bb7f0e5dc90ab2ed6f67251c73e150bee45dd90bf2dbae9911c71d7b5e09ffd4",
     ".gemini/agents/nolan.md": "da250d3b940d4a8c88905dec58ac9a561be0190d1ab0a905f46cd032755f2d2c",
     ".gemini/agents/pax.md": "7d0b18ae1e6215c39167d48be72f3d4291626f78dedb6955dbff6dbf30f56e34",
@@ -154,7 +154,7 @@
     "06 AI Team/Agents/Larry/AGENT.md": "aa26a8dd96559e9c1171fc02e70ad95e647b4c58bd676fae9fc1e3df565b3245",
     "06 AI Team/Agents/Larry/Larry.md": "5017af55ee86a281a16700806b0f305c4977d52358b6672bbde9b5f91f533d5e",
     "06 AI Team/Agents/Larry/SOUL.md": "c21b47633044b2840a3f4c50ad5675cf5b6a29aa68521d9ebd8278d87e3a26ee",
-    "06 AI Team/Agents/Mack/AGENT.md": "80f81cc399cfeaf8a74ea631b91ad50cd7a9f0cd1dba111183927e71702367f8",
+    "06 AI Team/Agents/Mack/AGENT.md": "398675101942321475817066e3ae5388e706061842241aa228ddcd989e2de25b",
     "06 AI Team/Agents/Mack/Journal/2026-09-14-first-entry.md": "8a30fa12ea39c84e0e822f19092a412ad0ac6cfa0781054355cbe3551c9b6bdd",
     "06 AI Team/Agents/Mack/Journal/_template.md": "5ce0f51f38f457e5502210fee78e8018ca923576b6e7baee6b63fa68dd2161db",
     "06 AI Team/Agents/Mack/Mack.md": "3701aa00d3eb1589f4692d389173c0805d2999c5a68ae81565b1e01b0db2dea0",
@@ -178,7 +178,7 @@
     "06 AI Team/Agents/Silas/Journal/2026-09-14-first-entry.md": "df00da3536974bc8c40dfa008df8a17e4fc033df45a128103a6953f6c2f37fa6",
     "06 AI Team/Agents/Silas/Journal/_template.md": "f8526eb1e76d0afa3383ad460959aac840948139263e34e188afadf2fc05884e",
     "06 AI Team/Agents/Silas/Silas.md": "52cb8fc3867b6907a09721fd378d53f2120bb5f131fb3355313f755fc2a77250",
-    "06 AI Team/Agents/agent-index.md": "b3857aa81646738c2147ed005c84f775558f894ec4d54f21ffa807f98cb059c9",
+    "06 AI Team/Agents/agent-index.md": "330b8ea2ef99e8a017860b89417a4a4fdaaeafa2ef0604748b6ecb7badc4675e",
     "06 AI Team/Expansions/README.md": "0d6c150ac69d544c800f135cf59056c72697d2def62ae5535e0be69dec1de041",
     "06 AI Team/README.md": "ebd2d2f71f1b4a3dd85b9e02d2b367451ea85d2416aea9720dd4bcf7aebb27a5",
     "ADAPTER-PROMPT.md": "b07a25cf2a09c97f2bbb6b674e6531f11d7a4c89535ee7b0745550011ecb5dc1",
@@ -422,7 +422,8 @@
       "b166d0cfdc6c51476829ba18c8ea898c1069d6a3df86013bf7f456f32313083e"
     ],
     ".codex/agents/mack.toml": [
-      "a9443d40537fbbeed3f475f891a12a5dac3dc54a4ec8e2a18db9f683ab049b73"
+      "a9443d40537fbbeed3f475f891a12a5dac3dc54a4ec8e2a18db9f683ab049b73",
+      "f94bda0f2161b7906cea06c712436fe119f5eec4e0660902177751ac37808849"
     ],
     ".codex/agents/mason.toml": [
       "77fc21d33fbeecdaef26eae8062e9da2fb8c9ba7e641dc080f46b039bee8a2ad"
@@ -462,7 +463,8 @@
       "4a842fae2d231b6db97a67afb78177dff306e2acd400d60fac7a4ef13955ac26"
     ],
     ".gemini/agents/mack.md": [
-      "b8a22c86cfcbe5f55a610c0afcd1835df446d0890b672249fff2571f062a8791"
+      "b8a22c86cfcbe5f55a610c0afcd1835df446d0890b672249fff2571f062a8791",
+      "e118762708365599bfdb9d3cebc6f818c0333816fb3e2ca54abdff49934fe79c"
     ],
     ".gemini/agents/mason.md": [
       "6c39f3919d61cb3f4815d60994e214e7d9a1633b86e1fb821af1babb968c06f8"
@@ -840,6 +842,7 @@
     "06 AI Team/Agents/Mack/AGENT.md": [
       "1c88d0eb695a6bc4815223e413b8fadd4f159f0911ba973db5833869d89f672e",
       "32cffc3ab6c3f53338191f91846598b9ef7c2c5c5484fba8b426643f3e26140c",
+      "80f81cc399cfeaf8a74ea631b91ad50cd7a9f0cd1dba111183927e71702367f8",
       "cb0caa011709ae9690efcfefe67999d9ca762741ef31a8a33a6c120eb32916c6",
       "e2016ca97411257881ca4d11ca39784635ddf5cbc5b1f5b4468fa409a3cfe5d8"
     ],
@@ -892,6 +895,7 @@
       "32293ddca26d8fcd1cbf4723233571b587ebe36da6fe7fcd7d5006d7a2f29ba8",
       "76f86473dbaa365e774d00105bb09e0acf7a83b09c0df4a76eba4ef3a0d8492a",
       "847fdb8815768b55229440568e5e40004d8caf50e951098d3d6b479fd369619c",
+      "b3857aa81646738c2147ed005c84f775558f894ec4d54f21ffa807f98cb059c9",
       "c895c9e90a087de3035ffe0987b9b6a7f302344b97f7bd95a8e86b1d087c9369",
       "ea00502a364b7d1b9ca8428deaf0fd3bf581d2ae2a2f40a6866d535323ccf847",
       "fe14904c4358f358e3dd98b430b4bc8937eed01d26eb94de95d17bd9b9c560ab",

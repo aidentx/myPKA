@@ -13,7 +13,7 @@ created: 2026-08-27
 | [[Penn]] | Knowledge processor | scratchpads, Inbox captures, journal entries, Inner World filing; checking and repairing what the user filed by hand ([[SOP-1014-check-and-repair-what-was-filed-by-hand|SOP-1014]]) |
 | [[Nolan]] | HR | a needed role has no owner; new agent contracts |
 | [[Pax]] | Researcher | external facts, web research, verification before action |
-| [[Mack]] | Automation specialist | tool connections (MCP, API, webhook, OAuth), automations, fetching data from a service before an import |
+| [[Mack]] | Automation specialist | tool connections (MCP, API, webhook, OAuth), automations, fetching data from a service before an import, **and the guards in `Scripts/`**: the updater, `checkpoint.py`, `check-drift.py`, the release checks — his under [[SOP-1016-run-the-red-tests-and-gate-a-release\|SOP-1016]], which owns the red-test gate that proves them |
 | [[Silas]] | Structure and database architect | frontmatter and structure audits, the vault health checks (validate-scaffold, validate-team, check-bases, check-quality), new fields, Bases, the Databases room, the shape of an import; structural repairs, never a note's content |
 | [[Iris]] | Design system architect | the design system: create, extend, audit against; the first creative request when none exists yet |
 | [[Charta]] | Structured visual content | infographics, tables, diagrams, carousels, one-pagers, PDFs from clean HTML |
