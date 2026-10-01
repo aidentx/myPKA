@@ -2,7 +2,7 @@
 """Create a session log skeleton in Session Logs/YYYY/MM/.
 
 Usage:
-  new-session-log.py --agent larry --slug scaffold-build \
+  new-session-log.py --agent aiden --slug scaffold-build \
       [--datetime "2026-08-27 21:30"]
 
 Deterministic parts owned here: location, filename, frontmatter skeleton.

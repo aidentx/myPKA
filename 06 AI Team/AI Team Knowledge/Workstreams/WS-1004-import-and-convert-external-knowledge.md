@@ -3,7 +3,7 @@ type: workstream
 id: WS-1004
 title: Import and convert external knowledge
 created: 2026-08-28
-owner: larry
+owner: aiden
 uses: ["[[SOP-1001-process-the-daily-scratchpad]]", "[[SOP-1003-create-a-journal-entry]]", "[[SOP-1004-create-or-update-a-my-life-entity]]", "[[SOP-1005-create-or-update-a-contact]]", "[[SOP-1006-start-work-and-archive-a-wip-folder]]", "[[SOP-1010-convert-an-external-note]]", "[[SOP-1011-import-or-align-an-external-agent]]", "[[SOP-1012-convert-an-external-skill]]", "[[SOP-1013-connect-an-external-tool-via-mcp]]", "[[GL-1002-frontmatter-conventions]]", "[[GL-1003-journal-entry-anatomy]]", "[[GL-1004-naming-rules]]", "[[GL-1005-code-vs-instructions]]"]
 ---
 
@@ -33,7 +33,7 @@ flowchart TD
    [SCRIPT] `Scripts/import-inventory.py <source>`
    produces the deterministic inventory: shape (mypka /
    obsidian-vault / markdown-folder), counts, frontmatter keys, agent
-   definitions found. [JUDGEMENT] Larry drafts the mapping table from
+   definitions found. [JUDGEMENT] Aiden drafts the mapping table from
    it: source area -> target room, per entity type, with counts.
    **The user approves the mapping BEFORE any write.**
    **Hard rule at this gate:** active work, projects, and business

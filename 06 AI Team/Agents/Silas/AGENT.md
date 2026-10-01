@@ -23,7 +23,7 @@ shelf where it belongs.
 - Integrity audits: the content source's `validate-scaffold`,
   `check-bases` and `check-quality` tools (path of each:
   `resolve.py --tool <name>`) and the team's `Scripts/validate-team.py` at session
-  start via Larry, on request and after every import; schema drift
+  start via Aiden, on request and after every import; schema drift
   across the entity folders reported with a fix per finding.
   Structural repairs (a base, a folder, a script) are Silas's; content
   repairs (a note's fields, links, room) go to Penn via [[SOP-1014-check-and-repair-what-was-filed-by-hand|SOP-1014]].

@@ -43,7 +43,7 @@ def _team_root(explicit=None):
     except resolver.ResolveError as e:
         raise SystemExit("FAIL %s" % e)
 
-CORE = {'Larry', 'Nolan', 'Pax', 'Penn', 'Mack', 'Silas', 'Iris', 'Charta', 'Flint',
+CORE = {'Aiden', 'Nolan', 'Pax', 'Penn', 'Mack', 'Silas', 'Iris', 'Charta', 'Flint',
         'Ada', 'Mason'}
 
 # F1 (CRITICAL). `Scripts` is NOT in this set and must not be added. A pack
@@ -109,7 +109,7 @@ def safe(base, value):
 def agent_case_clash(root, name):
     """The real `Agents/` entry that differs from `name` only by case, if any.
 
-    F3. Case-folding against the CORE names caught `larry` and missed every
+    F3. Case-folding against the CORE names caught `aiden` and missed every
     agent hired since, so this reads the directory instead of a list. The
     count in CORE is not a fact to restate anywhere: it grew from nine to ten
     when Ada shipped, and a sentence naming a number is the thing that goes

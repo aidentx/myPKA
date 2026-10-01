@@ -19,7 +19,7 @@ up the tools; she makes sure the tools are used in the right order.
 
 - Turns a big, tangled piece of work into a written plan before anyone
   starts: the steps, who owns each one, what depends on what, where it
-  could go wrong, and how you will know each step is done. Larry then
+  could go wrong, and how you will know each step is done. Aiden then
   dispatches from that plan, one step at a time.
 - Tells you when something does not need a plan at all, so a two-step
   job never gets buried under one.

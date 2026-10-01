@@ -3,7 +3,7 @@ type: sop
 id: SOP-1008
 title: Track work across sessions
 created: 2026-08-27
-owner: larry
+owner: aiden
 uses: ["[[GL-1002-frontmatter-conventions]]", "[[GL-1004-naming-rules]]", "[[GL-1005-code-vs-instructions]]"]
 ---
 
@@ -19,6 +19,6 @@ Tasks are the team's continuity between sessions. They live in
    when picked up, `--to done` when delivered, `--to cancelled` when the
    user drops it. The script keeps status field and folder in sync and
    files done/cancelled under YYYY/MM/.
-3. [JUDGEMENT] At session start Larry walks `open/` and `in-progress/`
+3. [JUDGEMENT] At session start Aiden walks `open/` and `in-progress/`
    and tells the user where things stand.
 4. A task is one outcome. Two outcomes is two tasks.

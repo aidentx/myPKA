@@ -32,7 +32,7 @@ THE 22 CHECKS
  10  shim-size   shim body under the line cap and carries no pasted contract
  11  shim-tools  tools come from the allowlist; private-data rule relayed
  12  index       agent-index row with [[<Name>]] and the slug, slug unique
- 13  cheatsheet  (private) Larry's routing cheatsheet names the specialist
+ 13  cheatsheet  (private) Aiden's routing cheatsheet names the specialist
  14  skills      every skill with this slug's prefix passes skill-doctor.py
  15  skill-oblig the hire workup's `skills:` list matches what is on disk
  16  sop-scripts every [SCRIPT] step in this agent's SOPs names a script that exists
@@ -387,7 +387,7 @@ class Vault(object):
         self.agents_dir = self.root / AGENTS_REL
         self.scripts_dir = self.root / SCRIPTS_REL
         self.index_text = read(self.agents_dir / "agent-index.md")
-        self.larry_text = read(self.agents_dir / "Larry" / "AGENT.md")
+        self.aiden_text = read(self.agents_dir / "Aiden" / "AGENT.md")
         self.hooks_rules = self._hooks_rules()
         self.red_tests_text = read(self.scripts_dir / "run-red-tests.py")
         self._note_index = None
@@ -550,7 +550,7 @@ class Vault(object):
     # --- roster ----------------------------------------------------------
     def dispatchable(self):
         """Agent folders a host can dispatch: every folder under Agents/
-        except Larry (the main-session identity, never a subagent), the
+        except Aiden (the main-session identity, never a subagent), the
         hiring template, and anything the index lists as retired."""
         out = []
         if not self.agents_dir.is_dir():
@@ -559,7 +559,7 @@ class Vault(object):
         for p in sorted(self.agents_dir.iterdir()):
             if not p.is_dir() or p.name.startswith("_") or p.name.startswith("."):
                 continue
-            if p.name in ("Larry", "Agent 01"):
+            if p.name in ("Aiden", "Agent 01"):
                 continue
             if p.name in retired:
                 continue
@@ -825,7 +825,7 @@ def check_agent(vault, name):
         for n in (7, 8, 9, 10, 11):
             res.skip(n, "shim", "this folder has no Claude Code surface, so no shim is required")
     elif not shim_text:
-        res.fail(7, "shim", ".claude/agents/%s.md is missing, so Larry cannot dispatch %s"
+        res.fail(7, "shim", ".claude/agents/%s.md is missing, so Aiden cannot dispatch %s"
                  % (slug, name))
         for n in (8, 9, 10, 11):
             res.skip(n, "shim", "no shim to check")
@@ -926,7 +926,7 @@ def check_agent(vault, name):
             if re.search(r"\[\[%s(?:\||\])" % re.escape(name), line) and line.strip().startswith("|"):
                 rows.append((head, line))
     if not rows:
-        res.fail(12, "index", "agent-index.md has no live row for [[%s]]; Larry's routing skips "
+        res.fail(12, "index", "agent-index.md has no live row for [[%s]]; Aiden's routing skips "
                  "an unlisted specialist" % name)
     else:
         slug_cells = re.findall(r"^\|[^|]+\|\s*([a-z0-9-]+)\s*\|", vault.index_text, re.M)
@@ -936,17 +936,17 @@ def check_agent(vault, name):
         else:
             res.ok(12, "index", "row in section `%s`" % rows[0][0])
 
-    # 13. Larry cheatsheet, private only
+    # 13. Aiden cheatsheet, private only
     if vault.public:
         res.skip(13, "cheatsheet", "the Scaffold routes from agent-index alone")
     else:
-        m = re.search(r"\n## Routing cheatsheet\b(.*?)(?=\n## |\Z)", vault.larry_text, re.S)
+        m = re.search(r"\n## Routing cheatsheet\b(.*?)(?=\n## |\Z)", vault.aiden_text, re.S)
         if not m:
-            res.fail(13, "cheatsheet", "Larry/AGENT.md has no `## Routing cheatsheet` section")
+            res.fail(13, "cheatsheet", "Aiden/AGENT.md has no `## Routing cheatsheet` section")
         elif re.search(r"\b%s\b" % re.escape(name), m.group(1)):
-            res.ok(13, "cheatsheet", "named in Larry's routing cheatsheet")
+            res.ok(13, "cheatsheet", "named in Aiden's routing cheatsheet")
         else:
-            res.fail(13, "cheatsheet", "Larry's routing cheatsheet does not name %s, so Larry "
+            res.fail(13, "cheatsheet", "Aiden's routing cheatsheet does not name %s, so Aiden "
                      "has no cue that routes there" % name)
 
     # 14 and 15. skills
@@ -1377,7 +1377,7 @@ title: Agent roster and routing
 
 | Agent | Slug | Role | Route here when |
 | --- | --- | --- | --- |
-| [[Larry]] | - | Orchestrator | always the entry point |
+| [[Aiden]] | - | Orchestrator | always the entry point |
 | [[Testy]] | testy | Fixture specialist | a self-test needs an agent |
 
 ## Retired
@@ -1386,7 +1386,7 @@ title: Agent roster and routing
 | --- | --- | --- | --- |
 """
 
-CLEAN_LARRY = """---
+CLEAN_AIDEN = """---
 myicor_id: 99999999-2222-4333-8444-555555555555
 agent_version: 1.0.0
 agent_version_date: '2026-09-14'
@@ -1395,7 +1395,7 @@ agent_compatibility: tool-agnostic
 owner: Nolan
 ---
 
-# Larry
+# Aiden
 
 ## Routing cheatsheet
 
@@ -1403,7 +1403,7 @@ owner: Nolan
 |---|---|
 | "run the fixture" | Testy |
 
-## What Larry does not do
+## What Aiden does not do
 """
 
 CLEAN_PROPOSAL = """---
@@ -1436,7 +1436,7 @@ def build_fixture(dest, public=False, scripts_dir=None):
     for room in resolver.ICOR_FOUR_ROOMS:
         (dest / room).mkdir(parents=True, exist_ok=True)
     (dest / AGENTS_REL / "Testy" / "Journal").mkdir(parents=True, exist_ok=True)
-    (dest / AGENTS_REL / "Larry").mkdir(parents=True, exist_ok=True)
+    (dest / AGENTS_REL / "Aiden").mkdir(parents=True, exist_ok=True)
     (dest / SHIM_REL).mkdir(parents=True, exist_ok=True)
     (dest / SCRIPTS_REL).mkdir(parents=True, exist_ok=True)
     (dest / SKILLS_REL).mkdir(parents=True, exist_ok=True)
@@ -1451,7 +1451,7 @@ def build_fixture(dest, public=False, scripts_dir=None):
     (a / "AGENT.md").write_text(CLEAN_CONTRACT.replace("@WIP@", wip_room_name(dest)))
     (a / "Testy.md").write_text(CLEAN_BIO)
     (a / "Journal" / "_template.md").write_text("# Journal template\n")
-    (dest / AGENTS_REL / "Larry" / "AGENT.md").write_text(CLEAN_LARRY)
+    (dest / AGENTS_REL / "Aiden" / "AGENT.md").write_text(CLEAN_AIDEN)
     (dest / AGENTS_REL / "agent-index.md").write_text(CLEAN_INDEX)
     (dest / SHIM_REL / "testy.md").write_text(CLEAN_SHIM)
     (dest / "06 AI Team/AI Team Knowledge/Guidelines"
@@ -1563,7 +1563,7 @@ def _plant_12(v):
 
 
 def _plant_13(v):
-    p = v / AGENTS_REL / "Larry" / "AGENT.md"
+    p = v / AGENTS_REL / "Aiden" / "AGENT.md"
     p.write_text(p.read_text().replace('| "run the fixture" | Testy |', ""))
 
 
@@ -1713,7 +1713,7 @@ PLANTS = [
     (10, "shim-size", "the contract appended to the shim", _plant_10, "both"),
     (11, "shim-tools", "`tools: Read, Bsh`, a typo the host drops silently", _plant_11, "private"),
     (12, "index", "the agent-index row deleted", _plant_12, "both"),
-    (13, "cheatsheet", "Larry's cheatsheet row deleted", _plant_13, "private"),
+    (13, "cheatsheet", "Aiden's cheatsheet row deleted", _plant_13, "private"),
     (14, "skills", "a SKILL.md citing SOP-999, which does not exist", _plant_14, "both"),
     (15, "skill-oblig", "the workup lists a skill that is not on disk", _plant_15, "both"),
     (15, "skill-oblig", "the same, the workup in the sibling content folder (mode B)",

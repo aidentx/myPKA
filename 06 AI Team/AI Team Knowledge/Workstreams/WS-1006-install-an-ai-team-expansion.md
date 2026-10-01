@@ -7,7 +7,7 @@ created: 2026-09-13
 
 # Install an AI Team expansion
 
-Larry guides installation when a pack appears in `06 AI Team/Expansions/`
+Aiden guides installation when a pack appears in `06 AI Team/Expansions/`
 or the owner asks to install one. The format and boundaries live in
 [[GL-1012-ai-team-expansions]]. This is a layer over the existing myPKA
 team, not a replacement scaffold.
@@ -40,7 +40,7 @@ Explain the job it adds, every destination, any overlap with current
 roles, scripts or knowledge, and required runtime capabilities. Nolan
 reviews new agents; Silas reviews structure and links; Mack reviews code
 and external connections. Existing-file conflicts stop automatic copying.
-Do not merge a new specialist over Larry or another core agent. The plan
+Do not merge a new specialist over Aiden or another core agent. The plan
 must name any roster/index changes needed after copying.
 
 Ask the owner to approve this concrete installation scope if it is not

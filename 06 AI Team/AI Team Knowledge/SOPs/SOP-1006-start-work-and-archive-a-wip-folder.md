@@ -3,7 +3,7 @@ type: sop
 id: SOP-1006
 title: Start, work, and archive a WiP folder
 created: 2026-08-27
-owner: larry
+owner: aiden
 uses: ["[[GL-1001-the-six-rooms]]", "[[GL-1002-frontmatter-conventions]]", "[[GL-1004-naming-rules]]"]
 ---
 
@@ -23,7 +23,7 @@ uses: ["[[GL-1001-the-six-rooms]]", "[[GL-1002-frontmatter-conventions]]", "[[GL
    single file that grows a second file becomes a folder of the same
    name, with the file moved in as its `README.md` and the links
    repointed.
-2. Larry routes the work to the owning agent(s) per the agent index;
+2. Aiden routes the work to the owning agent(s) per the agent index;
    drafts and iterations stay with it.
 3. [JUDGEMENT] Work that runs past one session, or past one step, gets a
    progress report in its folder (below). The team creates it unasked.

@@ -45,7 +45,7 @@ folders).
 | WiP work, one file | `<bucket>/YYYY-MM-DD-<slug>.md` | `Operations/2026-08-27-pivot-video.md` |
 | WiP work, two files or more | `<bucket>/YYYY-MM-DD-<slug>/` | `Operations/2026-08-27-pivot-video/` |
 | Task | `YYYY-MM-DD-<slug>.md` | `2026-08-27-seed-example-notes.md` |
-| Session log | `YYYY-MM-DD-HH-MM_<agent>_<slug>.md` | `2026-08-27-21-30_larry_scaffold-build.md` |
+| Session log | `YYYY-MM-DD-HH-MM_<agent>_<slug>.md` | `2026-08-27-21-30_aiden_scaffold-build.md` |
 | SOP / WS / GL, yours | `SOP-NNN-<slug>.md` etc., `001` to `999` | `SOP-001-weekly-invoice-run.md` |
 | SOP / WS / GL, shipped by the scaffold | `SOP-1NNN-<slug>.md` etc., `1001` to `1999` | `SOP-1001-process-the-daily-scratchpad.md` |
 | SOP / WS / GL, shipped by an Expansion pack | `EP-SOP-2NNN-<slug>.md` etc., `2001` to `2999`, frontmatter `id: SOP-2NNN` | `EP-SOP-2011-build-a-ui-component.md` |

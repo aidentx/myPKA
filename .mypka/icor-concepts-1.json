@@ -1554,7 +1554,7 @@
         "routing_description": {
           "required": true,
           "kind": "text",
-          "note": "required on every new hire; Larry carries none"
+          "note": "required on every new hire; Aiden carries none"
         },
         "shim_reads": {
           "required": false,

@@ -19,7 +19,7 @@ uses: ["[[SOP-1007-hire-a-new-agent]]", "[[SOP-1011-import-or-align-an-external-
 
 Users find skills online: Claude Skills (SKILL.md packages), prompt
 recipes, agent toolkits. None of them enter this scaffold verbatim.
-Larry routes the request; Nolan rules the conversion. A skill is
+Aiden routes the request; Nolan rules the conversion. A skill is
 DECOMPOSED into the scaffold's native shapes:
 
 | Skill part | Becomes | Where |

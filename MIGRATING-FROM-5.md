@@ -64,7 +64,7 @@ More that changed:
    The zip holds hidden files whose names start with a dot. Moving files by hand in the Mac Finder leaves them behind, and `unzip` keeps them. For mode B instead, follow [README-myPKA.md](README-myPKA.md).
 6. **Move your keys yourself.** Copy the lines you need from your v5 `.env` into a `.env` in the new folder. Never paste a key into the chat.
 7. **Move your own rules.** If you wrote your own rules into v5's `CLAUDE.md` or `AGENTS.md`, put them into `AGENTS.local.md`, next to the new `AGENTS.md`. That file is yours: no update ever overwrites it. It can't switch off a hard rule or a guard.
-8. **Open the new folder in your AI and import.** In the first session, Larry offers to import existing knowledge and AI teams. Say yes and give him the path to your v5 folder. Later on, you can ask for it any time: "import my myPKA v5 folder from `<path>`". Then:
+8. **Open the new folder in your AI and import.** In the first session, Aiden offers to import existing knowledge and AI teams. Say yes and give him the path to your v5 folder. Later on, you can ask for it any time: "import my myPKA v5 folder from `<path>`". Then:
    - The team takes stock of your v5 folder and drafts a mapping: what goes where, with counts. **Nothing is written until you approve it.**
    - Penn converts your notes into the new structure, links included.
    - Agents you hired in v5 don't land as they are. Nolan decides for each one: hire it again as a proper agent, merge it into an existing agent, or keep its knowledge as SOPs and Guidelines.

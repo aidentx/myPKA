@@ -14,11 +14,11 @@ This file is called `README-myPKA.md` because, when myPKA sits inside your ICOR 
 
 ## The team
 
-You talk to Larry. He works out what you need, hands it to the right specialist and brings the result back to you.
+You talk to Aiden. He works out what you need, hands it to the right specialist and brings the result back to you.
 
 | Agent | What they do |
 | --- | --- |
-| **Larry** | Orchestrator. Your one point of contact. Routes the work and never does a specialist's job himself. |
+| **Aiden** | Orchestrator. Your one point of contact. Routes the work and never does a specialist's job himself. |
 | **Penn** | Files your scratchpad notes, Inbox captures and journal entries into the right place. Repairs what you filed by hand, after you say yes. |
 | **Nolan** | Hires a new specialist when a job has no owner. |
 | **Pax** | Research and fact checks before anything is acted on. |

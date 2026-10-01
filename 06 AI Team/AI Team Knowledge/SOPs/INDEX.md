@@ -12,10 +12,10 @@ The scaffold's own SOPs carry numbers from 1001 up; yours take 001 to
 | [[SOP-1003-create-a-journal-entry\|SOP-1003 Create a journal entry]] | Penn | a journal entry is asked for, or inside SOP-1001 and SOP-1002 |
 | [[SOP-1004-create-or-update-a-my-life-entity\|SOP-1004 Create or update a My Life entity]] | Penn | a Goal, Key Element, Topic, Project or Habit appears |
 | [[SOP-1005-create-or-update-a-contact\|SOP-1005 Create or update a Contact]] | Penn | a person or company appears |
-| [[SOP-1006-start-work-and-archive-a-wip-folder\|SOP-1006 Start work and archive a WiP folder]] | Larry | work starts or finishes in the WiP room |
+| [[SOP-1006-start-work-and-archive-a-wip-folder\|SOP-1006 Start work and archive a WiP folder]] | Aiden | work starts or finishes in the WiP room |
 | [[SOP-1007-hire-a-new-agent\|SOP-1007 Hire a new agent]] | Nolan | the team needs a role it does not have |
-| [[SOP-1008-track-work-across-sessions\|SOP-1008 Track work across sessions]] | Larry | work runs past one session |
-| [[SOP-1009-write-a-session-log-and-agent-journal\|SOP-1009 Write a session log and agent journal]] | Larry | every session close |
+| [[SOP-1008-track-work-across-sessions\|SOP-1008 Track work across sessions]] | Aiden | work runs past one session |
+| [[SOP-1009-write-a-session-log-and-agent-journal\|SOP-1009 Write a session log and agent journal]] | Aiden | every session close |
 | [[SOP-1010-convert-an-external-note\|SOP-1010 Convert an external note]] | Penn | a foreign note is imported |
 | [[SOP-1011-import-or-align-an-external-agent\|SOP-1011 Import or align an external agent]] | Nolan | an agent arrives from elsewhere |
 | [[SOP-1012-convert-an-external-skill\|SOP-1012 Convert an external skill]] | Nolan | a skill arrives from elsewhere |

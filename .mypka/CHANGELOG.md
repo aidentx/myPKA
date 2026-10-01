@@ -6,6 +6,17 @@ and what was removed or moved, every removed or moved file named in
 backticks. `check-version-bump.py` refuses a release whose shipped files
 changed without a new VERSION and a section here.
 
+## 6.0.4
+
+This local customization renames the orchestrator from Larry to Aiden while preserving the stable myICOR ID. It has not been tagged or published.
+
+- Renamed: `06 AI Team/Agents/Larry/AGENT.md` to `06 AI Team/Agents/Aiden/AGENT.md`.
+- Renamed: `06 AI Team/Agents/Larry/Larry.md` to `06 AI Team/Agents/Aiden/Aiden.md`.
+- Renamed: `06 AI Team/Agents/Larry/SOUL.md` to `06 AI Team/Agents/Aiden/SOUL.md`.
+- Renamed: `06 AI Team/AI Team Knowledge/Avatars/larry.png` to `06 AI Team/AI Team Knowledge/Avatars/aiden.png`.
+- Changed: current identity references, the orchestrator exemption, and generated host shims now use Aiden.
+- Migration: the updater leaves files that are no longer shipped in place. An existing installation gets the new Aiden paths but keeps its old Larry folder; move any local customizations manually and remove the old folder only after checking it.
+
 ## 6.0.3
 
 A quick capture has one name, whichever key makes it, and this repository

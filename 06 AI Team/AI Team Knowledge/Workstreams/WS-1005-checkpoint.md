@@ -3,7 +3,7 @@ type: workstream
 id: WS-1005
 title: Checkpoint (end a session on purpose)
 created: 2026-09-06
-owner: larry
+owner: aiden
 skill_name: checkpoint
 skill_summary: 'Ends a session on purpose: reads the checkpoint report, closes or carries every task the session touched, rules on each WiP folder with the user, links the dates the session wrote, writes the session log and asserts it exists before the session is allowed to be over.'
 skill_triggers:
@@ -48,7 +48,7 @@ whenever you stop for the day, and whenever a piece of work is done.
    ([[GL-1011-date-mentions-link-to-daily-notes|GL-1011]]). It runs before
    the log is written, so the log's own dates are linked too. Additive and
    idempotent; nothing to rule on.
-5. [SCRIPT] **Session log.** `Scripts/new-session-log.py --agent larry
+5. [SCRIPT] **Session log.** `Scripts/new-session-log.py --agent aiden
    --slug <what-happened>`, then fill it per
    [[SOP-1009-write-a-session-log-and-agent-journal|SOP-1009]]: what
    happened, decisions, open threads. Agents that learned something

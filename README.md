@@ -16,7 +16,7 @@ The team gives your AI better context, a clear job for every agent, procedures i
 
 ## The team
 
-You talk to **Larry**, the orchestrator. He hands each job to the right specialist and brings the result back. Ten specialists work with him, from **Penn**, who files your notes and your journal, to **Nolan**, who hires a new specialist when a job has no owner. The full team, with every job, is in [README-myPKA.md](README-myPKA.md#the-team).
+You talk to **Aiden**, the orchestrator. He hands each job to the right specialist and brings the result back. Ten specialists work with him, from **Penn**, who files your notes and your journal, to **Nolan**, who hires a new specialist when a job has no owner. The full team, with every job, is in [README-myPKA.md](README-myPKA.md#the-team).
 
 ## Works with your AI
 
@@ -43,7 +43,7 @@ You talk to **Larry**, the orchestrator. He hands each job to the right speciali
 3. **Choose where it lives:**
    - **Mode A, inside your ICOR for Life folder.** One folder holds both. The two products share no file names, so neither overwrites the other. No extra setup.
    - **Mode B, in its own folder next to your ICOR for Life folder.** You copy one file, `.mypka/sources.yaml`, that tells the team where your content is.
-4. **Open the folder in your AI** and say hello to Larry.
+4. **Open the folder in your AI** and say hello to Aiden.
 
 The full steps, including mode B and moving from ICOR for Life 1.34, are in [README-myPKA.md](README-myPKA.md). That file also ships inside the download.
 

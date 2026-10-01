@@ -436,7 +436,7 @@ def read_contracts(root):
     Three exclusions, each for its own reason: a folder with no AGENT.md is not
     a contract; a contract with no routing_description is the orchestrator, who
     is the session's own identity and is never dispatched (GL-025 exempts
-    Larry); a contract still on the nil placeholder id is the hire template.
+    Aiden); a contract still on the nil placeholder id is the hire template.
 
     Returns (contracts, problems). A contract whose `tools`, `model` or
     `shim_reads` would not survive the render is a PROBLEM and is dropped, so
@@ -1377,7 +1377,7 @@ def gemini_entry(root, b):
     0.58.0 source on 2026-09-24: workspace settings and GEMINI.md are gated
     by the SAME folder-trust check (untrusted means neither is applied, and
     trust is on only when `security.folderTrust.enabled` is set), so this
-    file finds Larry exactly where a GEMINI.md would have.
+    file finds Aiden exactly where a GEMINI.md would have.
 
     JSON carries no generated header, so a settings.json that exists is the
     user's: it is never rewritten, only checked, and a missing AGENTS.md entry

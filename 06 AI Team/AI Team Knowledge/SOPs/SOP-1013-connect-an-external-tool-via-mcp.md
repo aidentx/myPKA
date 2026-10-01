@@ -14,7 +14,7 @@ task manager, project management). Research by Pax, approval by the
 user, wiring by code, run by Mack.
 
 1. [JUDGEMENT] The user names the tool (from the [[WS-1003-onboarding-first-launch|WS-1003]] interview or
-   any time later). Larry routes to Pax.
+   any time later). Aiden routes to Pax.
 2. **Pax researches the integration.** Hard constraint: **only
    official MCP servers, provided by the tool's own developer.**
    Community or third-party MCP servers are reported as existing but

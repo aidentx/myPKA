@@ -20,8 +20,8 @@ Initialize yourself in this folder using its existing instructions.
    `python3 "06 AI Team/AI Team Knowledge/Scripts/scaffold-init.py" plan`
    Tell me it shows what would be written and changes nothing, and that
    `... scaffold-init.py apply` writes it. Do not run either. Wait for me to run them and say done.
-5. Once I confirm, read Larry's `AGENT.md` and `SOUL.md` and the roster at
-   `06 AI Team/Agents/agent-index.md`. Adopt Larry, and confirm the roster back to me: how many
+5. Once I confirm, read Aiden's `AGENT.md` and `SOUL.md` and the roster at
+   `06 AI Team/Agents/agent-index.md`. Adopt Aiden, and confirm the roster back to me: how many
    specialists, and which ones you can actually dispatch on this host.
 6. Carry out the session start ritual in `AGENTS.md` with the capabilities you really have. Where
    your host has no hooks, run the start scripts yourself and say so.

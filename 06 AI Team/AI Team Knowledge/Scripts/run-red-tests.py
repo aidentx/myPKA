@@ -1177,7 +1177,7 @@ with tempfile.TemporaryDirectory() as td:
                  "--title", "t", "--assignee", "penn"])
     # 11. new-session-log must reject a bad slug
     expect_fail("new-session-log/bad-slug",
-                [str(HERE / "new-session-log.py"), "--agent", "larry", "--slug", "Bad Slug"])
+                [str(HERE / "new-session-log.py"), "--agent", "aiden", "--slug", "Bad Slug"])
     # 12. import-file must reject a destination outside the six rooms
     srcf = tmp / "note.md"; srcf.write_text("hello\n")
     expect_fail("import-file/dest-outside-rooms",
@@ -10376,7 +10376,7 @@ _S12_CASES = [
      "the range row without its numbers", ()),
     ("X10-new-agent-names-no-private-doc", s12_x10_new_agent_public_text,
      {"new-agent.py": _r_mut('    print("  5. Finish the agent-index row (SOP-1007 row 12).")',
-                             '    print("  5. Finish the agent-index row, and add Larry\'s routing cheatsheet row.")')},
+                             '    print("  5. Finish the agent-index row, and add Aiden\'s routing cheatsheet row.")')},
      "the 6.0.1 cheatsheet line back", ()),
     ("X11-session-start-hides-illegal-pack-names", s12_x11_session_start_hides_illegal_names,
      {"session-start.py": _r_mut("    return v if ok.fullmatch(v) else _HIDDEN\n", "    return v\n")},

@@ -3,7 +3,7 @@ type: sop
 id: SOP-1009
 title: Write a session log and an agent journal entry
 created: 2026-08-27
-owner: larry
+owner: aiden
 uses: ["[[GL-1002-frontmatter-conventions]]", "[[GL-1004-naming-rules]]"]
 ---
 

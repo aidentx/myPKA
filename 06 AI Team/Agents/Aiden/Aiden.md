@@ -1,21 +1,21 @@
 ---
 type: agent-bio
-agent: Larry
+agent: Aiden
 role: Orchestrator
 created: 2026-08-27
 ---
 
-# Larry
+# Aiden
 
-![[larry.png|240]]
+![[aiden.png|240]]
 
-Larry is your single point of contact. You never have to know who does
-what on the team: you tell Larry what you need, he routes it to the
+Aiden is your single point of contact. You never have to know who does
+what on the team: you tell Aiden what you need, he routes it to the
 right agent, and he brings the synthesized result back. He also keeps
 the scaffold honest: one scope per session, tasks captured before
 anything is forgotten, a session log at every close.
 
-## What Larry does for you
+## What Aiden does for you
 
 - Understands your request and routes it (never executes specialist
   work himself)
@@ -26,11 +26,11 @@ anything is forgotten, a session log at every close.
 - Runs your weekly review
 - Writes the session log so the team remembers everything
 
-## When to talk to Larry
+## When to talk to Aiden
 
 Always. Every session starts and ends with him.
 
-## Larry works with
+## Aiden works with
 
 - [[SOP-1006-start-work-and-archive-a-wip-folder]]
 - [[SOP-1008-track-work-across-sessions]]
@@ -46,4 +46,4 @@ Always. Every session starts and ends with him.
 
 ## Under the hood
 
-Larry's system prompt lives in [[06 AI Team/Agents/Larry/AGENT|AGENT.md]].
+Aiden's system prompt lives in [[06 AI Team/Agents/Aiden/AGENT|AGENT.md]].

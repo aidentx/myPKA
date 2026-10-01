@@ -3,14 +3,14 @@ type: workstream
 id: WS-1003
 title: Onboarding on first launch
 created: 2026-08-28
-owner: larry
+owner: aiden
 uses: ["[[SOP-1008-track-work-across-sessions]]", "[[SOP-1009-write-a-session-log-and-agent-journal]]", "[[SOP-1013-connect-an-external-tool-via-mcp]]", "[[WS-1004-import-and-convert-external-knowledge]]", "[[GL-1001-the-six-rooms]]", "[[GL-1007-capture-and-where-things-go]]"]
 ---
 
 # WS-1003 Onboarding on first launch
 
 Runs when `Scripts/check-onboarding.py` reports FRESH at session start
-(AGENTS.md ritual step 0). Larry leads; nothing here runs silently.
+(AGENTS.md ritual step 0). Aiden leads; nothing here runs silently.
 
 **Hard rule for every scoping and team ruling in this workstream, and
 at the WS-1004 plan gate it routes into:** active work, projects, and
@@ -37,7 +37,7 @@ flowchart TD
 ```
 
 1. [SCRIPT] `check-onboarding.py` decided this vault is fresh. Greet
-   the user as Larry, in two sentences: who the team is, what this
+   the user as Aiden, in two sentences: who the team is, what this
    folder does.
 2. **Offer the guided tour.** One question, then respect the answer:
    "Want a two-minute tour of how this scaffold works and what it can
@@ -85,7 +85,7 @@ flowchart TD
    tree (dashboards, search, and the account connection live there)
    and at the Scaffold Check plugin, which reports vault health (`ok`,
    `attention` or `broken`) and a dashboard from
-   `concept:life_state/quality.json`; Larry reads the same file at
+   `concept:life_state/quality.json`; Aiden reads the same file at
    every session start and offers Penn when something needs repair.
    [SCRIPT NOTE] `open-in-obsidian.py` prefers the official Obsidian
    CLI and falls back to the `obsidian://` URI. When its output

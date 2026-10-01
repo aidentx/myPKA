@@ -29,7 +29,7 @@ to repeat yourself, and a brand you can defend and extend.
 ## When to call Iris
 
 "Set up my design system", "what colours and fonts should I use", "is
-this on-brand", "the visuals look inconsistent". Larry also sends your
+this on-brand", "the visuals look inconsistent". Aiden also sends your
 first creative request to Iris when no design system exists yet.
 
 ## Iris works with

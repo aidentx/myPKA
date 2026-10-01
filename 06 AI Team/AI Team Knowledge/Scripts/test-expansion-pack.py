@@ -113,7 +113,7 @@ class ExpansionTests(unittest.TestCase):
         self.assertFalse((self.root / self.dest).exists())
 
     def test_target_escape_and_core_contract(self):
-        for dest in ['../escape.md', '/tmp/escape.md', '06 AI Team/Agents/Larry/AGENT.md', '06 AI Team/Agents/larry/AGENT.md', '06 AI Team/Agents/Ada/AGENT.md', 'AGENTS.md', '04 Inner World/Notes/overwrite.md', '06 AI Team/AI Team Knowledge/SOPs/.env', '06 AI Team/Agents/new/../../escape.md']:
+        for dest in ['../escape.md', '/tmp/escape.md', '06 AI Team/Agents/Aiden/AGENT.md', '06 AI Team/Agents/aiden/AGENT.md', '06 AI Team/Agents/Ada/AGENT.md', 'AGENTS.md', '04 Inner World/Notes/overwrite.md', '06 AI Team/AI Team Knowledge/SOPs/.env', '06 AI Team/Agents/new/../../escape.md']:
             with self.subTest(dest=dest):
                 self.refuses(dest)
 

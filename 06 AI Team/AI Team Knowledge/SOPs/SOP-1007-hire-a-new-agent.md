@@ -46,7 +46,7 @@ missing.
 | 11 | Hook rule per gate the agent owns, `owns_gates:` on the contract | `hooks-rules.json` | Mack writes, Vex reviews | conditional (step 6c) |
 | 12 | agent-index row, linking the bio | `06 AI Team/Agents/agent-index.md` | Nolan | required |
 | 13 | Validator run: `check-hire.py <Name>` exit 0 | shown to the user in step 8 | Nolan | required, before the hire is announced |
-| 14 | Session log line | `Scripts/new-session-log.py` | Larry | required |
+| 14 | Session log line | `Scripts/new-session-log.py` | Aiden | required |
 | 15 | Manifest entries | `.icor-for-life/manifest.json` | the release build, never by hand | required |
 
 ## Scripts Nolan runs in a hire
@@ -242,7 +242,7 @@ third workaround.
    from step 6b runs after this approval, never before it. Say here
    whether the avatar is a placeholder, and whether
    `ICOR_UNLOCK_WRITES=1` was used at all (on a hire it should not be).
-9. [SCRIPT] Larry logs the hire: `Scripts/new-session-log.py`, and
+9. [SCRIPT] Aiden logs the hire: `Scripts/new-session-log.py`, and
    `Scripts/checkpoint.py --assert-logged` at the checkpoint; the log
    line names the validator result and, when step 6b applies, the
    result of the first bounded task. The

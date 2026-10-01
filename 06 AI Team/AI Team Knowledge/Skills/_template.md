@@ -24,4 +24,4 @@ Resources the SOP depends on (open only when a step names them):
 - `06 AI Team/Agents/<Name>/AGENT.md`
 - `<guideline or template path>`
 
-Return to Larry: <the completion evidence the SOP's last step names>.
+Return to Aiden: <the completion evidence the SOP's last step names>.
