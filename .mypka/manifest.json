@@ -2,8 +2,8 @@
   "schema": 2,
   "name": "myPKA",
   "version": "6.0.3",
-  "built": "2026-09-26T16:38:10Z",
-  "commit": "e87216d",
+  "built": "2026-10-01T15:21:46Z",
+  "commit": "600d86f",
   "lab": false,
   "requires": "icor-concepts >=1 <2",
   "files": {
@@ -103,14 +103,14 @@
     "06 AI Team/AI Team Knowledge/Scripts/import-file.py": "85c3230510a6fe04a39fbe39895cc1e76a7d06af16628ecadb57937148f55365",
     "06 AI Team/AI Team Knowledge/Scripts/import-inventory.py": "feaca78d7d9fc6e85f0dd2abc87815883752ab61c8130f6ae9b1419a1eff73b8",
     "06 AI Team/AI Team Knowledge/Scripts/mint-agent-ids.py": "f3e9c74e2df51d19cff71b00bde0b80c1308a4ad5ce287f523c818b2be7ac561",
-    "06 AI Team/AI Team Knowledge/Scripts/mypka-update.py": "909d39cc28c05801ead5d61c36cf4d8c403998926e9cba4c2107a6197e2d8ffe",
+    "06 AI Team/AI Team Knowledge/Scripts/mypka-update.py": "82f10fa088dd4405aaef1535720f6c1226ec617f6683c861d3bd7f9ef03bdeef",
     "06 AI Team/AI Team Knowledge/Scripts/new-agent.py": "9ee163e517807afd3a5526e17c6dfcc1722d7006be198c798df68f03d14613d0",
     "06 AI Team/AI Team Knowledge/Scripts/new-progress-report.py": "9ad0685aa1b0a1f40d66813dfd19a1574015e36ac123e0ccec4733e17f763ee7",
     "06 AI Team/AI Team Knowledge/Scripts/new-session-log.py": "3604dba7b3156f9b4441816a79f446daf3d49b8ca74ae565c8db4291093e0b6f",
     "06 AI Team/AI Team Knowledge/Scripts/new-task.py": "df25b25f4f7e6d597343b8332d016e4550bcb733a667a51cac3d05d14a77f5bd",
     "06 AI Team/AI Team Knowledge/Scripts/noteio.py": "8adf62965c7a646d9e567eaed2d809164796c75f81c6cb6626a8fbf0e3bd7f22",
     "06 AI Team/AI Team Knowledge/Scripts/resolve.py": "353f622b2e22ee49dd3f0ec4454db6e87ae72a56094611646644d4ebc70454ef",
-    "06 AI Team/AI Team Knowledge/Scripts/run-red-tests.py": "5353460b6a3916864f6732490146b1c2fb144c96550a8125a0db3e2066d6e85d",
+    "06 AI Team/AI Team Knowledge/Scripts/run-red-tests.py": "d001d26ff4a3e1cdd9d416bbcbc706d8d4e84f6c1cf8642bac66675782af4855",
     "06 AI Team/AI Team Knowledge/Scripts/scaffold-init.py": "c9aef875c3ffb43b24540cd44751d9e896bd08dfc6f83350e549fbc0a52afb98",
     "06 AI Team/AI Team Knowledge/Scripts/session-start.py": "345d3ed46d8c60251703be2937a27e63bb49a2d90e438de784ba6d0a90f9c981",
     "06 AI Team/AI Team Knowledge/Scripts/skill-doctor.py": "fc1dca2fbf6709340c5da18154052ec63c847e4e54be9560e60916dd5d376c15",
@@ -312,6 +312,13 @@
     }
   ],
   "history": [
+    {
+      "version": "6.0.3",
+      "date": "2026-10-01",
+      "removed": [],
+      "renamed": [],
+      "added": []
+    },
     {
       "version": "6.0.3",
       "date": "2026-09-26",
@@ -665,7 +672,8 @@
       "b2d1062504b303bb21538c46b56f2996711899f8e90bb8c58616ecfd87cc679b"
     ],
     "06 AI Team/AI Team Knowledge/Scripts/mypka-update.py": [
-      "56a70d5d73207bcbf7378a23dc0dfd797ebb91acedba72d39789a8c90e14379d"
+      "56a70d5d73207bcbf7378a23dc0dfd797ebb91acedba72d39789a8c90e14379d",
+      "909d39cc28c05801ead5d61c36cf4d8c403998926e9cba4c2107a6197e2d8ffe"
     ],
     "06 AI Team/AI Team Knowledge/Scripts/new-agent.py": [
       "1faa20915b1ed4408518f3163920e5ba411da4d0399ac291d72a03a392db7a5c",
@@ -707,6 +715,7 @@
       "3361df5956f5ec21af6ca8f7d03def96ddc65da6b8b9e75196e8478af3b36e5e",
       "3dea2309950c354b63d2eede724ae9a5c4ea60c3e5145a79963ebb13a46a2a07",
       "4dc4347fee7b3cbe7ef34638c88122ebe8e562b612589c5150644a3f65e94e85",
+      "5353460b6a3916864f6732490146b1c2fb144c96550a8125a0db3e2066d6e85d",
       "5dd1fbc4b7899b7dc8edced49565c7ec3fefa93af73d98acff2269583ed89cfb",
       "62b2d53b07ebe6ff36e4fe085e0dbf95cae74444cc3292076f7e57314518bfb1",
       "6d470be23e71cef32067813c811243644dc618eaae4e051eba3174e21fe21477",

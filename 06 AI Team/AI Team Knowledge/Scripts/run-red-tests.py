@@ -8131,6 +8131,77 @@ def s12_up_edited(muts):
     return out
 
 
+def _s12_moved_pin(tag, rebuild):
+    """A member-edited shipped file whose installed pin EQUALS the live bytes —
+    the moved-pin state `build-mypka-manifest.py` creates after a rebuild, and
+    the exact shape every existing updater fixture is the INVERSE of (they pin
+    each file to its own live bytes and edit the working tree). Returns the
+    target and the release, ready to run against.
+
+    The target is a git checkout (like the real team root): the shipped bytes
+    are committed at HEAD, then the working tree is edited. `git show HEAD:` is
+    the shipped baseline the guard reads, and it only exists under git.
+
+    rebuild=True  the installed pin is the member's edited bytes (as if the
+                  rebuild had recomputed it from the working tree), while the
+                  release ships DIFFERENT bytes.
+    rebuild=False the installed pin stays the shipped bytes (no rebuild), the
+                  working tree is the member's edit — the existing rule-3
+                  protection, asserted so the new branch cannot regress it.
+    """
+    shipped = b"shipped bytes\n"
+    edited = b"shipped bytes\n# member edit\n"
+    newver = b"the new upstream version\n"
+    v1 = _s12_release(tag + "-v1", "1.0.0", {"06 AI Team/B.md": shipped})
+    t = _s12_install(tag, v1)
+    _s12_git(t, "init", "-q")
+    _s12_git(t, "add", "-A")
+    _s12_git(t, "commit", "-q", "-m", "shipped")
+    (t / "06 AI Team/B.md").write_bytes(edited)
+    if rebuild:
+        m = _r_json(t / ".mypka/manifest.json") or {}
+        m["files"]["06 AI Team/B.md"] = _s12_hash(edited)
+        (t / ".mypka/manifest.json").write_text(json.dumps(m), encoding="utf-8")
+    v2 = _s12_release(tag + "-v2", "1.1.0", {"06 AI Team/B.md": newver})
+    return t, v2
+
+
+def s12_up_moved_pin(muts):
+    """Moved-pin guard, direction (b): an installed pin that EQUALS the live
+    bytes while the release ships different bytes is `kept+upd` — the member's
+    bytes survive --live and upstream is staged as <file>.update — NEVER an
+    `update` overwrite. This is the state a routine manifest rebuild creates,
+    and the one no existing fixture can see (they all pin to the shipped bytes).
+    """
+    out = []
+    t, v2 = _s12_moved_pin("up-moved-pin", rebuild=True)
+    r = _s12_up(muts, "up-moved-pin", v2, t, "--live")
+    _s12_expect(out, "live", r, 0, "06 AI Team/B.md.update", "stdout")
+    if "KEPT" not in r.stdout:
+        out.append("no KEPT report line for the moved pin")
+    if (t / "06 AI Team/B.md").read_bytes() != b"shipped bytes\n# member edit\n":
+        out.append("the member's edit was overwritten (the moved-pin loss reproduced)")
+    if not (t / "06 AI Team/B.md.update").is_file() or (t / "06 AI Team/B.md.update").read_bytes() != b"the new upstream version\n":
+        out.append("06 AI Team/B.md.update is missing or does not hold the new version")
+    return out
+
+
+def s12_up_moved_pin_no_rebuild(muts):
+    """The same edit WITHOUT the rebuild (pin == shipped) is still `kept+upd`,
+    so the moved-pin branch cannot regress the existing rule-3 protection."""
+    out = []
+    t, v2 = _s12_moved_pin("up-moved-pin-norebuild", rebuild=False)
+    r = _s12_up(muts, "up-moved-pin-norebuild", v2, t, "--live")
+    _s12_expect(out, "live", r, 0, "06 AI Team/B.md.update", "stdout")
+    if "KEPT" not in r.stdout:
+        out.append("no KEPT report line for the un-rebuilt edit")
+    if (t / "06 AI Team/B.md").read_bytes() != b"shipped bytes\n# member edit\n":
+        out.append("the member's edit was overwritten without a rebuild")
+    if not (t / "06 AI Team/B.md.update").is_file():
+        out.append("06 AI Team/B.md.update is missing without a rebuild")
+    return out
+
+
 def s12_up_never_deletes(muts):
     """T7 part 2: an unshipped file and a retired file are never deleted."""
     out = []
@@ -10210,6 +10281,13 @@ _S12_CASES = [
     ("UP2b-unchanged-upstream-no-update", s12_up2b_unchanged_upstream,
      {_S12_UP: _r_mut("        elif installed and installed == want:", "        elif False:")},
      "a .update written although upstream did not change the file", ()),
+    ("UP28-moved-pin-kept-upd", s12_up_moved_pin,
+     {_S12_UP: _r_mut("            if _uncommitted_vs_head(target, rel, have):", "            if False:")},
+     "the moved-pin guard switched off", ()),
+    ("UP29-moved-pin-no-rebuild-still-kept", s12_up_moved_pin_no_rebuild,
+     {_S12_UP: _r_mut('("kept+upd", rel, "edited by you, left as is; the new version is at %s.update (the "',
+                      '("update", rel, "edited by you, left as is; the new version is at %s.update (the "')},
+     "the un-rebuilt edit no longer kept+upd", ()),
     ("UP12b-unreadable-version-refused", s12_up12b_unreadable_version,
      {_S12_UP: _r_mut("    if old and semver_key(v_old) is None and not args.allow_downgrade:", "    if False:")},
      "an unreadable installed version skips the downgrade check", ()),
