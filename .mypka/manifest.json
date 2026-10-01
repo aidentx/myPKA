@@ -2,8 +2,8 @@
   "schema": 2,
   "name": "myPKA",
   "version": "6.0.3",
-  "built": "2026-09-26T16:38:10Z",
-  "commit": "e87216d",
+  "built": "2026-10-01T15:25:10Z",
+  "commit": "f7eaec1",
   "lab": false,
   "requires": "icor-concepts >=1 <2",
   "files": {
@@ -110,12 +110,12 @@
     "06 AI Team/AI Team Knowledge/Scripts/new-task.py": "df25b25f4f7e6d597343b8332d016e4550bcb733a667a51cac3d05d14a77f5bd",
     "06 AI Team/AI Team Knowledge/Scripts/noteio.py": "8adf62965c7a646d9e567eaed2d809164796c75f81c6cb6626a8fbf0e3bd7f22",
     "06 AI Team/AI Team Knowledge/Scripts/resolve.py": "353f622b2e22ee49dd3f0ec4454db6e87ae72a56094611646644d4ebc70454ef",
-    "06 AI Team/AI Team Knowledge/Scripts/run-red-tests.py": "5353460b6a3916864f6732490146b1c2fb144c96550a8125a0db3e2066d6e85d",
+    "06 AI Team/AI Team Knowledge/Scripts/run-red-tests.py": "bfb1378326a7df1873081e90e8cf9cd59b2de3b769887d59b6ed9c69a57de3ce",
     "06 AI Team/AI Team Knowledge/Scripts/scaffold-init.py": "c9aef875c3ffb43b24540cd44751d9e896bd08dfc6f83350e549fbc0a52afb98",
     "06 AI Team/AI Team Knowledge/Scripts/session-start.py": "345d3ed46d8c60251703be2937a27e63bb49a2d90e438de784ba6d0a90f9c981",
     "06 AI Team/AI Team Knowledge/Scripts/skill-doctor.py": "fc1dca2fbf6709340c5da18154052ec63c847e4e54be9560e60916dd5d376c15",
     "06 AI Team/AI Team Knowledge/Scripts/test-expansion-pack.py": "7ba4960fafa19910e669c1a5c1f75bc0ef60058095e9074ad90df3a18fe254c1",
-    "06 AI Team/AI Team Knowledge/Scripts/validate-team.py": "fdb93f36c64de42fa0b0f44cfc5457b1963cc4e134ba8fa15d232f17a242bfbd",
+    "06 AI Team/AI Team Knowledge/Scripts/validate-team.py": "72b40a9b518aae1ade9d1c52fb8f776cd91028514a8cd9de399901ce8e555daf",
     "06 AI Team/AI Team Knowledge/Scripts/write-guard.py": "55a02fde23cedf63eb83bb5d520118d1e12fc258b0b10893e6da1044e25f2a2f",
     "06 AI Team/AI Team Knowledge/Scripts/zip-staged-tree.sh": "1ed4ae53268557646f5a185dd50443f03c7197f85ced6101495fcdf82394da8e",
     "06 AI Team/AI Team Knowledge/Session Logs/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -312,6 +312,13 @@
     }
   ],
   "history": [
+    {
+      "version": "6.0.3",
+      "date": "2026-10-01",
+      "removed": [],
+      "renamed": [],
+      "added": []
+    },
     {
       "version": "6.0.3",
       "date": "2026-09-26",
@@ -707,6 +714,7 @@
       "3361df5956f5ec21af6ca8f7d03def96ddc65da6b8b9e75196e8478af3b36e5e",
       "3dea2309950c354b63d2eede724ae9a5c4ea60c3e5145a79963ebb13a46a2a07",
       "4dc4347fee7b3cbe7ef34638c88122ebe8e562b612589c5150644a3f65e94e85",
+      "5353460b6a3916864f6732490146b1c2fb144c96550a8125a0db3e2066d6e85d",
       "5dd1fbc4b7899b7dc8edced49565c7ec3fefa93af73d98acff2269583ed89cfb",
       "62b2d53b07ebe6ff36e4fe085e0dbf95cae74444cc3292076f7e57314518bfb1",
       "6d470be23e71cef32067813c811243644dc618eaae4e051eba3174e21fe21477",
@@ -746,6 +754,9 @@
       "1d216b7986d97a63cab147d1714de9985bf6f5b74a088aadd3a8d43b508af1d5",
       "54350ae8fbcabb1ad2d5a038989a504b8338c5622956f224cf9c4e7632c5478b",
       "8e32b33f64e6cd61321789616a8542846ea3b44fd2285eef9fae2c616bbd9ffe"
+    ],
+    "06 AI Team/AI Team Knowledge/Scripts/validate-team.py": [
+      "fdb93f36c64de42fa0b0f44cfc5457b1963cc4e134ba8fa15d232f17a242bfbd"
     ],
     "06 AI Team/AI Team Knowledge/Scripts/write-guard.py": [
       "a654459a6746095eb78120bccb689d5de0d3a98bc3f0182a1542d741d261e9f3",

@@ -91,13 +91,43 @@ for p in required:
         fails.append("missing required folder: %s" % rel(p))
 
 # --- 2. date nesting --------------------------------------------------------
+def _task_nesting_ok(parts) -> bool:
+    """Date-nesting for a done/cancelled TASK entry.
+
+    ``YYYY/MM/<name>.md`` is a plain task. Anything deeper must be inside a
+    promoted task's own folder, which ``new-task.py move`` carries whole
+    ("A promoted task moves as its folder, deliverables and all") and which
+    GL-1013 describes as travelling "through open/, in-progress/ and
+    done/YYYY/MM/". Two legal deep shapes:
+
+      ``YYYY/MM/<stem>/<stem>.md``          the task's own note
+      ``YYYY/MM/<stem>/deliverables/<...>`` a file inside its deliverables/
+
+    The stem match is what separates a promoted task from a stray folder: a
+    folder holding some other note name is still a nesting violation.
+    """
+    if len(parts) == 3:
+        return True
+    if len(parts) < 4:
+        return False
+    stem, inner = parts[2], parts[3]
+    if inner == "deliverables":
+        return True
+    return inner.endswith(".md") and inner[:-3] == stem
+
+
 for label, base in (("Session Logs", tp("session_logs")),
                     ("Tasks/done", tp("tasks", "done")),
                     ("Tasks/cancelled", tp("tasks", "cancelled"))):
     if base.is_dir():
+        # Session logs have no promoted-folder form and stay exactly YYYY/MM/.
+        _tasks = label.startswith("Tasks/")
         for f in base.rglob("*.md"):
             r = f.relative_to(base)
-            if len(r.parts) != 3:
+            if _tasks:
+                if not _task_nesting_ok(r.parts):
+                    fails.append("%s entry not in YYYY/MM/: %s" % (label, r))
+            elif len(r.parts) != 3:
                 fails.append("%s entry not in YYYY/MM/: %s" % (label, r))
 
 # --- 3. agent folders and the stable identity -------------------------------

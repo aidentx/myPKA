@@ -550,6 +550,28 @@ with tempfile.TemporaryDirectory() as td:
     if "not in YYYY/MM/" not in (_r_flat.stderr or ""):
         fails.append("validate-team/session-log-not-nested: went red, but not for the nesting: "
                      + (_r_flat.stderr or "").strip()[:200])
+    # validate-team check 2, the other direction: a PROMOTED task moved to
+    # done/ sits at done/YYYY/MM/<stem>/<stem>.md — four parts, not three.
+    # new-task.py moves it as a folder ("deliverables and all", GL-1013: "the
+    # folder travels with the task"), so the guard must accept that shape
+    # instead of calling correct placement a violation.
+    _prom = tmp / "team-promoted-done"
+    shutil.copytree(ROOT, _prom, ignore=fixture_ignore(".git", ".obsidian"))
+    _p_stem = "2026-09-24-promoted-probe"
+    _p_dir = resolver.team_path("tasks", root=_prom) / "done/2026/09" / _p_stem
+    (_p_dir / "deliverables").mkdir(parents=True, exist_ok=True)
+    (_p_dir / (_p_stem + ".md")).write_text("---\ntype: task\nstatus: done\n---\n\n# probe\n")
+    (_p_dir / "deliverables" / "notes-draft.md").write_text("draft\n")
+    expect_ok("validate-team/promoted-task-in-done", [str(HERE / "validate-team.py"), str(_prom)])
+    # …and a wrong nesting inside done/ stays red: a folder whose inner note
+    # name does not match the folder stem is not the promoted shape.
+    _p_bad = _p_dir / (_p_stem + "-mismatch.md")
+    (_p_dir / (_p_stem + ".md")).rename(_p_bad)
+    _r_pbad = expect_refusal("validate-team/promoted-task-stem-mismatch",
+                             [str(HERE / "validate-team.py"), str(_prom)])
+    if "not in YYYY/MM/" not in (_r_pbad.stderr or ""):
+        fails.append("validate-team/promoted-task-stem-mismatch: went red, but not for the nesting: "
+                     + (_r_pbad.stderr or "").strip()[:200])
     # 2. validate-scaffold must reject an ICOR stage folder name
     bad = tmp / "bad-scaffold"
     shutil.copytree(ROOT, bad, ignore=fixture_ignore(".obsidian"))
