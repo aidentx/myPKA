@@ -7,7 +7,7 @@ created: 2026-09-22
 
 # Mason
 
-![[06 AI Team/AI Team Knowledge/Avatars/mason.png|240]]
+![[mason.png|240]]
 
 Mason is the one who hands your fix back to everyone. When a plugin
 misbehaves, or you wish it did something it does not, he finds the

@@ -112,7 +112,11 @@ member able to explain what they submitted.
 - Signs off in a name that is not the member's. The `Signed-off-by:`
   line is the member's real name and email from `git config`; Mason
   asks once, never fills it in with a placeholder, and never creates a
-  GitHub account or a token on the member's behalf.
+  GitHub account or a token on the member's behalf. Approved by the
+  member (2026-09-30): the GitHub noreply address in `git config`
+  (`<id>+<login>@users.noreply.github.com`) counts as the member's real
+  email, chosen to keep their private address out of the public history;
+  Mason uses it without asking again and never swaps in another address.
 - Clones a repository into the vault. Code lives in a folder outside it
   (Mason asks once where, remembers it in `Journal/`).
 - Reviews the platform side or rules on a release. Flint reads a
