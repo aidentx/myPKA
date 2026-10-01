@@ -2,8 +2,8 @@
   "schema": 2,
   "name": "myPKA",
   "version": "6.0.3",
-  "built": "2026-10-01T15:04:56Z",
-  "commit": "fc008a6",
+  "built": "2026-10-01T15:17:44Z",
+  "commit": "be2e429",
   "lab": false,
   "requires": "icor-concepts >=1 <2",
   "files": {
@@ -20,7 +20,7 @@
     ".claude/settings.README.md": "cacd7f2deb2c3e9e93cdbee199195ea2adc423e9e70a5f6a5ed1a97787adb088",
     ".claude/settings.json": "d2e30f08c42af9ff022df3122b16fe6ef55667de771d1ace7a127981722b9942",
     ".claude/skills/answer-the-six-life-questions/SKILL.md": "8130f52da06657b90d2caee64ddf254265bdfab1117dd8680875fb3c0c612499",
-    ".claude/skills/checkpoint/SKILL.md": "eb5724879a7ac48a536b9f87b87be3027e5a41faedd9362d44e834cd256a1cbd",
+    ".claude/skills/checkpoint/SKILL.md": "74d98c1459cc2339c486b6b4d32eab751aff62737f597bef3dac17a76b5aaa07",
     ".claude/skills/import-skill/SKILL.md": "b1d423861b082c40f11c4269b2805c1cae56109b03958a1a8ad753ffd8ec27a3",
     ".claude/skills/red-tests/SKILL.md": "45eecfd53e11086363db711ae4f076de7562dac5567949de019028b78a4ae698",
     ".codex/agents/ada.toml": "cfad3eeeaae3bdfb243997c6eb64e476cb08386334eeea8790ccd8d0e8e1f7ff",
@@ -110,7 +110,7 @@
     "06 AI Team/AI Team Knowledge/Scripts/new-task.py": "df25b25f4f7e6d597343b8332d016e4550bcb733a667a51cac3d05d14a77f5bd",
     "06 AI Team/AI Team Knowledge/Scripts/noteio.py": "8adf62965c7a646d9e567eaed2d809164796c75f81c6cb6626a8fbf0e3bd7f22",
     "06 AI Team/AI Team Knowledge/Scripts/resolve.py": "353f622b2e22ee49dd3f0ec4454db6e87ae72a56094611646644d4ebc70454ef",
-    "06 AI Team/AI Team Knowledge/Scripts/run-red-tests.py": "face82049c9f0f017fcb25fa9000f2998588bc530190aa93805a3e3bad765628",
+    "06 AI Team/AI Team Knowledge/Scripts/run-red-tests.py": "37c53f8edfaae9bfea120149fc1ace22d5283032b32e6f56d7039db69a048ed1",
     "06 AI Team/AI Team Knowledge/Scripts/scaffold-init.py": "c9aef875c3ffb43b24540cd44751d9e896bd08dfc6f83350e549fbc0a52afb98",
     "06 AI Team/AI Team Knowledge/Scripts/session-start.py": "d79d36d998bd6817e9499d194fe51d9ff3ebe53af955b7e55e15ab637a0fa946",
     "06 AI Team/AI Team Knowledge/Scripts/skill-doctor.py": "fc1dca2fbf6709340c5da18154052ec63c847e4e54be9560e60916dd5d376c15",
@@ -122,7 +122,7 @@
     "06 AI Team/AI Team Knowledge/Skills/README.md": "91b33000ab4c1f54f695f365d6d0a6c633927973eb7023dd29cc44169a414a41",
     "06 AI Team/AI Team Knowledge/Skills/_template.md": "bd2ac487bf9f425e99fa614bc2de67be6a32f3685c2e05e1eae3605e18a72ec6",
     "06 AI Team/AI Team Knowledge/Skills/answer-the-six-life-questions/SKILL.md": "d7527e15375ea580231e9c7e3f6300e508c3e25345d6f9fb032319fa3c3247db",
-    "06 AI Team/AI Team Knowledge/Skills/checkpoint/SKILL.md": "d60a8a008ff01b50045d9df593ba5d1da7f213430d73d183b922688519a2fef8",
+    "06 AI Team/AI Team Knowledge/Skills/checkpoint/SKILL.md": "0ca07f36e7357f8518a4086a95341f603e6e29b9ad03e509f582826c7ab72b30",
     "06 AI Team/AI Team Knowledge/Skills/import-skill/SKILL.md": "8e96ff70d4a2dcb0c3a4bc4dce07d2520b1dcfad1790a9f6e2b2bb4d66d73af9",
     "06 AI Team/AI Team Knowledge/Skills/red-tests/SKILL.md": "11d58d08e7d13af9e40ff56a7e64f068a66f2a06861a8196f18496571dc0167d",
     "06 AI Team/AI Team Knowledge/Tasks/cancelled/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -314,6 +314,13 @@
   "history": [
     {
       "version": "6.0.3",
+      "date": "2026-10-01",
+      "removed": [],
+      "renamed": [],
+      "added": []
+    },
+    {
+      "version": "6.0.3",
       "date": "2026-09-26",
       "removed": [
         {
@@ -398,7 +405,8 @@
       "1fead659ee1f14bb0fb5d52898e3b40960f10489f08206e905d13ea77f7fe38b"
     ],
     ".claude/skills/checkpoint/SKILL.md": [
-      "2dcaab5f87068984f2596c55a3d5cc8953c4d8a32881c5a44f4aad47e07a17f6"
+      "2dcaab5f87068984f2596c55a3d5cc8953c4d8a32881c5a44f4aad47e07a17f6",
+      "eb5724879a7ac48a536b9f87b87be3027e5a41faedd9362d44e834cd256a1cbd"
     ],
     ".claude/skills/import-skill/SKILL.md": [
       "4204548e102b18c3349b33c7ecdf9c6162e4eaedf44b52afecfec81f7b4d1867",
@@ -765,7 +773,8 @@
       "07e7b30e229c74899dd0dbaa422744db5f413c0a425dc15b63b6ac21d46c41aa"
     ],
     "06 AI Team/AI Team Knowledge/Skills/checkpoint/SKILL.md": [
-      "9b5055e893938fdf85edfe82006fd0efe7bf8943b04b64d872852d8e80db254f"
+      "9b5055e893938fdf85edfe82006fd0efe7bf8943b04b64d872852d8e80db254f",
+      "d60a8a008ff01b50045d9df593ba5d1da7f213430d73d183b922688519a2fef8"
     ],
     "06 AI Team/AI Team Knowledge/Skills/import-skill/SKILL.md": [
       "143d9919ca092bec4159e98490bf7956db53e22ffc34400fc9826e8fe7d0b70b"
