@@ -15,12 +15,12 @@ The team half of GL-1002, moved here verbatim at the split (step 10, 2026-09-24)
 | --- | --- | --- | --- |
 | task | status (open/in-progress/done/cancelled), assignee | related, due | none: `Scripts/new-task.py` |
 | progress-report | status (live/closed), updated (ISO datetime) | plan | none: `Scripts/new-progress-report.py` |
-| hire-proposal | owner, title | status (draft/decision-ready/approved), skills (list of skill slugs, or the literal `none, judgement role`; the field `check-hire.py` checks 15 and 18 read) | none: the `proposal.md` in `concept:wip/YYYY-MM-DD-<name>-hire/`, [[SOP-1007-hire-a-new-agent]] row 2 |
+| hire-proposal | owner, title | status (draft/decision-ready/approved), skills (list of skill slugs, or the literal `none, judgement role`; the field `check-hire.py` checks 15 and 18 read) | none: the `proposal.md` in `concept:wip/ai_team/YYYY-MM-DD-<name>-hire/`, [[SOP-1007-hire-a-new-agent]] row 2 |
 | session-log | date, agents | - | none: `Scripts/new-session-log.py` |
 | sop / workstream / guideline | id, title | owner (the agent who runs this procedure by default, a lowercase agent slug; carried by every shipped sop and workstream, and by no guideline; ruling 2026-09-16), uses (the SOPs, Workstreams and Guidelines this one reads or invokes, a list of full quoted wikilinks and never bare text, per [[GL-1004-naming-rules]]; ruling 2026-09-16), skill_name (the skill's folder slug; REQUIRED once skill_triggers is non-empty), skill_summary (one sentence), skill_triggers (list of user phrases; non-empty makes the procedure skill-eligible), skill_prerun (one script invocation, injected before step 1); the four skill fields only meaningful on `sop` and `workstream`; wip_folder (text, the standing working folder `concept:wip/workstreams/<Name>/`, set only when it exists; only meaningful on `workstream`; ruling 2026-09-15) | none |
 | journal-entry | agent_id (the agent's slug), created (ISO datetime), topic (a slug) | updated (ISO datetime), status (durable/superseded), linked_session_logs, related_journal_entries | none: `Scripts/new-agent.py` seeds `Agents/<Name>/Journal/_template.md` |
 | agent-bio | agent, role | - | none |
-| agent-soul | agent | - | none: `Agents/Larry/SOUL.md`, Larry only |
+| agent-soul | agent | - | none: `Agents/Aiden/SOUL.md`, Aiden only |
 | agent | myicor_id (uuid v4, lowercase, immutable), name, role, routing_description (one line, required on every new hire) | shim_reads (list of paths), owns_gates (list of guard ids), brief_waived (why no research brief), tools (comma list of the tools the agent may use, each one from the allowlist `Scripts/check-hire.py` check 11 reads; absent means the host default) | none: `Agents/Agent 01/` |
 
 ## Progress reports (ruling 2026-08-29)
@@ -61,7 +61,7 @@ created: 2026-08-27
   appears in a filename, a folder name or a wikilink. `name` and the folder
   stay the human handle.
 - **One identity across vaults.** The ten agents this scaffold ships
-  (Ada, Charta, Flint, Iris, Larry, Mack, Nolan, Pax, Penn, Silas) carry their
+  (Ada, Charta, Flint, Iris, Aiden, Mack, Nolan, Pax, Penn, Silas) carry their
   ids in this repository, and every copy of one of those contracts, in a
   later scaffold release or in any vault that carries it, keeps the same
   id. A new hire in a vault gets a fresh id; an agent that arrives already
@@ -118,7 +118,7 @@ from the contract instead of typed twice:
 
 | field | type | required? | what it is | example |
 | --- | --- | --- | --- | --- |
-| `routing_description` | string, one line | **required on every new hire** | The routing text a host shim shows in its agent picker and reads when deciding whether to dispatch this agent. It is the source for `.claude/agents/<slug>.md` `description` and for every other host's equivalent, so a routing change is made here and the shims are regenerated, never typed into a shim. Larry is the one exception: he is the main-session identity and is never dispatched, so his contract carries none. | `routing_description: "Knowledge processor. Launch for scratchpad processing, Inbox captures, journal entries, My Life entities, and contacts."` |
+| `routing_description` | string, one line | **required on every new hire** | The routing text a host shim shows in its agent picker and reads when deciding whether to dispatch this agent. It is the source for `.claude/agents/<slug>.md` `description` and for every other host's equivalent, so a routing change is made here and the shims are regenerated, never typed into a shim. Aiden is the one exception: he is the main-session identity and is never dispatched, so his contract carries none. | `routing_description: "Knowledge processor. Launch for scratchpad processing, Inbox captures, journal entries, My Life entities, and contacts."` |
 | `shim_reads` | list of strings | optional | Vault-relative paths the generated shim tells the agent to read on invocation, beyond its own contract and the root pointer file, which every shim already names. Omit the key when the agent needs nothing always-on past its contract. | `shim_reads:` then `  - "06 AI Team/AI Team Knowledge/Guidelines/GL-1002-frontmatter-conventions.md"` on the next line |
 | `owns_gates` | list of strings | optional | The guard ids this agent owns, so a red guard has a name attached to it. An id is the `id` of a rule in `Scripts/hooks-rules.json`, the host-neutral rule table the hook adapters are generated from; until that table exists the id is the guard script's filename stem, which is what the table will key on. Every entry must name a guard that exists, is registered in a host hook config, and has a red test someone has watched fail. Most agents own none; omit the key then. | `owns_gates:` then `  - "check-onboarding"` on the next line |
 | `brief_waived` | string, one line | optional | Why this agent needed no research brief, when its domain was already settled. `Scripts/check-hire.py` check 21 accepts it in place of a waiver note in the hire workup folder, and reads the value rather than the key: the text has to say the brief was waived, so an empty or placeholder field waives nothing. Omit the key when a real brief exists and the contract links it. | `brief_waived: "Domain known, brief waived."` |
@@ -126,3 +126,39 @@ from the contract instead of typed twice:
 An `owns_gates` entry with no guard behind it is worse than an empty
 list: the roster reads as covered and the gate never fires. Remove the
 entry or build the guard.
+
+## Retired names: the tombstone (ruling 2026-09-30)
+
+A record may be renamed. An append-only record may not be edited, and it
+keeps the name it was written with. When the two meet, a citation points
+at a name that is gone, and the citation cannot be repaired. **The
+tombstone is the answer: the retired name is kept as a stub note whose
+stem is the old name.**
+
+Write one when ALL of these hold:
+
+- the old name is cited by at least one append-only record (a session
+  log; SOP-1009 governs the rest), and
+- the thing that was renamed is a task.
+
+The stub is one file, `Tasks/cancelled/YYYY/MM/<old-name>.md`, with the
+old name's own date, `status: cancelled`, and a body of three things and
+nothing else: that the name is retired, a wikilink to the live record
+under its new name, and why the name was kept. It carries no content, no
+open items and no `related` entries.
+
+- **Never link it from anywhere new.** It exists for citations already
+  written, never as a redirect to be used going forward.
+- **Do not write one when the old name is cited only by mutable files.**
+  A task file, a guideline or a script comment can be relinked, and
+  relinking is the fix; a stub would be a second name for one thing,
+  which is the drift this scaffold exists to prevent.
+- **The stub keeps the old stem, not an alias.** Resolution is by file
+  name (`check-wikilinks.py` indexes stems, and does not read
+  frontmatter), so an `aliases:` entry would not resolve the citation.
+  This is the one place a name is deliberately duplicated, and the
+  duplication is the mechanism.
+- **The new name is a new slug, and the old name retires.** A rename is
+  not a re-filing: a task keeps its `created:` date and its content, and
+  only its slug and its H1 change. Rewrite the slug when the old one
+  states a claim that was disproven, or a count that has moved.

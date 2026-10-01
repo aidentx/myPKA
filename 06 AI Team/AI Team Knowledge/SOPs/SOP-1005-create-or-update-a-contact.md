@@ -18,7 +18,9 @@ this SOP is the same moves run by the team.
    `"<name>"` (its path: `python3 "06 AI Team/AI Team Knowledge/Scripts/resolve.py" --tool find-entity`,
    [[GL-1013-sources-and-the-resolver|GL-1013]]) searches People
    and Companies (names AND aliases) before anything is created; a hit
-   means update, not create. One person, one note. By hand: the quick
+   means update, not create. Exit 2 is a clean absence; exit 1 with
+   `candidates` means close names exist (a partial name such as "Lee"),
+   so show them to the user and confirm before creating. One person, one note. By hand: the quick
    switcher (Cmd+O, or Ctrl+O on Windows). Create with
    the `new-entity` tool (path: `resolve.py --tool new-entity`)
    `person "<Name>"`

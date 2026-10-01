@@ -2,8 +2,8 @@
   "schema": 2,
   "name": "myPKA",
   "version": "6.0.3",
-  "built": "2026-09-26T16:38:10Z",
-  "commit": "e87216d",
+  "built": "2026-10-01T15:06:52Z",
+  "commit": "fc008a6",
   "lab": false,
   "requires": "icor-concepts >=1 <2",
   "files": {
@@ -71,22 +71,22 @@
     "06 AI Team/AI Team Knowledge/Guidelines/GL-1012-ai-team-expansions.md": "09ab903609cb225b40da5a81905ab242ea7f5a03d819587359f2118f0053bbfe",
     "06 AI Team/AI Team Knowledge/Guidelines/GL-1013-sources-and-the-resolver.md": "e61a3fcdf4ea27e96ba37e65612ddf6b5e85d03b61d119065b1451bee5aa228b",
     "06 AI Team/AI Team Knowledge/Guidelines/GL-1014-icor-concepts-schema.md": "22a83d391a7689a05211ab00d878760f4b98d078ceea04c8fccaed794e8f3429",
-    "06 AI Team/AI Team Knowledge/Guidelines/GL-1015-team-frontmatter-conventions.md": "57d31b6af94b22ac31eeb4370621e795ecc3a288135009217740f04cf378cb17",
+    "06 AI Team/AI Team Knowledge/Guidelines/GL-1015-team-frontmatter-conventions.md": "aab0e2ba829878c001bd992c3108537b837deb08bb2388946a2c203febc57eab",
     "06 AI Team/AI Team Knowledge/SOPs/INDEX.md": "db77298870d52f0871725c04105e5ee19eeec067152174b893a2eb0f211dafb3",
     "06 AI Team/AI Team Knowledge/SOPs/SOP-1001-process-the-daily-scratchpad.md": "6b2eee78193571b16856a9e867c11f337b99cb7cc5af407bc57c83983417b761",
     "06 AI Team/AI Team Knowledge/SOPs/SOP-1002-process-an-inbox-capture.md": "2c0afb08d025db2658c5867ab9f54a6ea0d17497535fb524ae2d19c08f01029c",
     "06 AI Team/AI Team Knowledge/SOPs/SOP-1003-create-a-journal-entry.md": "ae84841b36648ba19c0a5d3bda895a49459e922574dcdf398c32d2e6c10b27c5",
-    "06 AI Team/AI Team Knowledge/SOPs/SOP-1004-create-or-update-a-my-life-entity.md": "298e4885e98d39ca99162e2f92ccbb04209c6148e9a24472e58009b77a6772ea",
-    "06 AI Team/AI Team Knowledge/SOPs/SOP-1005-create-or-update-a-contact.md": "ee8ca88ad4d2e041c7535f78fd099228f34fab84032f0eee0122d282cd7fdab2",
+    "06 AI Team/AI Team Knowledge/SOPs/SOP-1004-create-or-update-a-my-life-entity.md": "b4983e61207f782e94d59c590f8d355923476e602d6a6248250147aaa74634f6",
+    "06 AI Team/AI Team Knowledge/SOPs/SOP-1005-create-or-update-a-contact.md": "e65494b3e0ee3bac4965de5fc9543e0ed6b909b923b532e302deb8ea6f0188f4",
     "06 AI Team/AI Team Knowledge/SOPs/SOP-1006-start-work-and-archive-a-wip-folder.md": "7ecad3423d52868ad71e003532d4bba66cd3da613b897ad40a762cebd24f2367",
-    "06 AI Team/AI Team Knowledge/SOPs/SOP-1007-hire-a-new-agent.md": "369339f0f07b1bf0b8e37118739423044f6330a3fd5c657afa05f5207f415e63",
+    "06 AI Team/AI Team Knowledge/SOPs/SOP-1007-hire-a-new-agent.md": "077fbff8427039c9939a2caf3fac82d72513ec6851ac6215c4891e5176099a67",
     "06 AI Team/AI Team Knowledge/SOPs/SOP-1008-track-work-across-sessions.md": "fbcc1801b08413b59bfbef3e5e1d3961c4bb2f47f08a068f32501c1002fc0a2e",
     "06 AI Team/AI Team Knowledge/SOPs/SOP-1009-write-a-session-log-and-agent-journal.md": "9b2c492cdceb93c4f51c3705b639bc94886f04eeeea5876bea94637e59bc1ef6",
     "06 AI Team/AI Team Knowledge/SOPs/SOP-1010-convert-an-external-note.md": "0041ebc8650bf258f57d516294e5e6b553cd46e5bb1117878c8a45bcc3c69a03",
     "06 AI Team/AI Team Knowledge/SOPs/SOP-1011-import-or-align-an-external-agent.md": "1162d92f779f4bc7c954c736f436825556591561f3cd5d8477d89f87a0e23398",
     "06 AI Team/AI Team Knowledge/SOPs/SOP-1012-convert-an-external-skill.md": "254d6b466b6389a039eead8635e6f282893a8a2da0d9334674dc0677d7c646f6",
     "06 AI Team/AI Team Knowledge/SOPs/SOP-1013-connect-an-external-tool-via-mcp.md": "ef163a10fdc2a2f151a169fc83d964d0f9e650ce583b797d66664e6de816c13c",
-    "06 AI Team/AI Team Knowledge/SOPs/SOP-1014-check-and-repair-what-was-filed-by-hand.md": "2fba79cdba5bc21361c7c6226ff786dc464502dc1635cea45c20a047d56b5e35",
+    "06 AI Team/AI Team Knowledge/SOPs/SOP-1014-check-and-repair-what-was-filed-by-hand.md": "e4e136b7d556545c039f97f1e7159280e8965d6d6e77f6b039ae103793070b4d",
     "06 AI Team/AI Team Knowledge/SOPs/SOP-1015-digest-a-meeting-transcript.md": "bac550b0345e4344be99dc596adea29de3b559ef40b43f40b2e033de9489e914",
     "06 AI Team/AI Team Knowledge/SOPs/SOP-1016-run-the-red-tests-and-gate-a-release.md": "aa96cd9f4abb3bcb5f5e78b37e92bcd7bcbaf8dfb4e07a94e6f3860a79dd4ee5",
     "06 AI Team/AI Team Knowledge/SOPs/SOP-1017-answer-the-six-life-questions-from-the-snapshot.md": "b0eaf01fc5cc1b7f14eb32a1bac9d06941c1d25d350bcdc93a2776fbe0a8a504",
@@ -526,6 +526,9 @@
     "06 AI Team/AI Team Knowledge/Guidelines/GL-1013-sources-and-the-resolver.md": [
       "016e115c20b7463e0d3ac2318b26b28b13748589391a4d1e7466882a5f98a040"
     ],
+    "06 AI Team/AI Team Knowledge/Guidelines/GL-1015-team-frontmatter-conventions.md": [
+      "57d31b6af94b22ac31eeb4370621e795ecc3a288135009217740f04cf378cb17"
+    ],
     "06 AI Team/AI Team Knowledge/SOPs/INDEX.md": [
       "400d5c2178c87d68854674e92098dd0af65680584b1c1393cdd8030194cc9c9c",
       "6ad6246ba4c0c1e7fa9018d078e96af0798dbf4ff7bcdf97ec0e5037413ff60c",
@@ -549,6 +552,7 @@
       "c27b5bbc40367d11d9c32f9cdba77e03851949cf478322338a975dc950874c7b"
     ],
     "06 AI Team/AI Team Knowledge/SOPs/SOP-1004-create-or-update-a-my-life-entity.md": [
+      "298e4885e98d39ca99162e2f92ccbb04209c6148e9a24472e58009b77a6772ea",
       "5807326f3cc0ea494780e6d75166394c258105f500b347339f5a6b53b9e59727",
       "d4ee1e39833052ee298143e65aca9220e1c13e2e1152d174a7dafd76b89d1ed0",
       "d79d9adbd6ec397fc208fc7a073cd79a023ac65dc495c4c6a57380fa4a4990ae"
@@ -556,7 +560,8 @@
     "06 AI Team/AI Team Knowledge/SOPs/SOP-1005-create-or-update-a-contact.md": [
       "14ddfbc4073a63ef6f197b51113bf0a2d06c9671db277a7ceb2660ace523f1dc",
       "6ac625182e0d70ca31824cce3878ac124ff0ac3bbcbd83b5c3d4338c75aa90ee",
-      "85399b08fc0dc7687a686c34fa79b67ba9adc4adc7df6657ac66d841d48d8307"
+      "85399b08fc0dc7687a686c34fa79b67ba9adc4adc7df6657ac66d841d48d8307",
+      "ee8ca88ad4d2e041c7535f78fd099228f34fab84032f0eee0122d282cd7fdab2"
     ],
     "06 AI Team/AI Team Knowledge/SOPs/SOP-1006-start-work-and-archive-a-wip-folder.md": [
       "0cca41a5e3ae446d7f8270a2e94aa648a3d6837d38b9abe70e64cf07a821c711",
@@ -564,6 +569,7 @@
     ],
     "06 AI Team/AI Team Knowledge/SOPs/SOP-1007-hire-a-new-agent.md": [
       "309f3cf057c29404b19b32d9188de384e1ff2c0bf9579776d4715b3c20f71f33",
+      "369339f0f07b1bf0b8e37118739423044f6330a3fd5c657afa05f5207f415e63",
       "8bec9a9a60e3fc539ec7f794d0e178e0a87dbbf42438c5c5ec449eb8276d0e5b",
       "8ccb1a5ec5eecbda92ee9ba0ac04157bcb549cd40d403efc4803e9c4eebd01b0",
       "ad76fd5d7841ded491b89e95c7de51da824d3f09969508171fb7f0288a45d0d3",
@@ -593,6 +599,7 @@
       "08b2486f827309dbe96e4a4d7b043174c7ae60fbb3fdc1f49ae50a9b40d94df6"
     ],
     "06 AI Team/AI Team Knowledge/SOPs/SOP-1014-check-and-repair-what-was-filed-by-hand.md": [
+      "2fba79cdba5bc21361c7c6226ff786dc464502dc1635cea45c20a047d56b5e35",
       "bfc2c3221cf0cde3aafc16b35138703fa859dc0e936d5a1db340516095469301",
       "e9800b5ef3aa37ab065b745213dedcf57fc51bed2214877a9d045df008758dbe"
     ],

@@ -68,8 +68,17 @@ the user removes the other one themselves.
      `[[<name>]]` is the one shape no reader can resolve on purpose.
 4. [JUDGEMENT] Judgement repairs are questions to the user, one line
    each, batched, never guessed:
-   - `notes_missing_link`: "Which Project, Key Element or Topic does
-     `<note>` serve? None means it is not a note and stays as it is."
+   - `notes_missing_link`: "Which Project, Key Element, Topic, person or
+     company does `<note>` serve? For a `type: document`, a `people` or
+     `companies` link alone is a valid answer (a contract filed only
+     for a contact is legal), so it is not a finding. For a note, none
+     of the three means it is not a note and stays as it is. For a
+     document, none of the five is a finding whose fix is a link, not a
+     ruling that it is not a note. For a document tagged `donation`, the
+     fix is a project link — `[[Donation Tracker]]` (charitable) or
+     `[[Political Donations]]` (political) — not a ruling: the tax kind
+     lives in the project and that link is what the donation views
+     select on."
    - `orphans`: "Nothing links to `<note>`. Link it from `<candidate>`,
      or leave it?"
    - `duplicate_entities`: "`<A>` and `<B>` look like one thing. Which

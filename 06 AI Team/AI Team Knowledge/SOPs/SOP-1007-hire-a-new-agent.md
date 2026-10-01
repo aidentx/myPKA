@@ -34,7 +34,7 @@ missing.
 | # | Artifact | Where | Who | Required |
 | --- | --- | --- | --- | --- |
 | 1 | Pax brief linked from the contract, or the contract's `brief_waived` field with the reasoning written in the workup's `proposal.md` | the WiP folder for the brief or the reasoning; the contract for the waiver itself | Pax / Nolan | required |
-| 2 | Hire WiP folder with `proposal.md` (frontmatter `type: hire-proposal` and `skills:`, per [[GL-1002-frontmatter-conventions|GL-1002]]) | `concept:wip/YYYY-MM-DD-<name>-hire/` | Nolan | required |
+| 2 | Hire WiP folder with `proposal.md` (frontmatter `type: hire-proposal` and `skills:`, per [[GL-1002-frontmatter-conventions|GL-1002]]) | `concept:wip/ai_team/YYYY-MM-DD-<name>-hire/` | Nolan | required |
 | 3 | `AGENT.md`, the system prompt, GL-1002 shape, `myicor_id` minted | `06 AI Team/Agents/<Name>/` | Nolan | required |
 | 4 | `<Name>.md`, the user-facing bio | same folder | Nolan | required |
 | 5 | Avatar | `06 AI Team/AI Team Knowledge/Avatars/<name>.png` (an Expansion pack ships it as `06 AI Team/Agents/<Name>/<name>.png`, which check 5 also accepts) | a Pixel-class (image-generating) specialist if one exists in this vault; otherwise a placeholder | required; a placeholder is allowed when no Pixel-class specialist exists, and check 5 reports it as WARN until the real one lands |

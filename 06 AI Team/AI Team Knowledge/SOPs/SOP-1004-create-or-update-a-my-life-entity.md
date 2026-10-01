@@ -22,7 +22,10 @@ this SOP is the same moves run by the team.
    `"<name>"` (its path: `python3 "06 AI Team/AI Team Knowledge/Scripts/resolve.py" --tool find-entity`,
    [[GL-1013-sources-and-the-resolver|GL-1013]]) searches every
    entity folder, names and aliases, before anything is created; a hit
-   means update, not create. One entity, one note, forever. By hand:
+   means update, not create. A miss is not automatically "create": exit 2
+   is a clean absence, but exit 1 with `candidates` means close names exist
+   (a partial name); show them to the user and confirm before creating.
+   One entity, one note, forever. By hand:
    the quick switcher (Cmd+O, or Ctrl+O on Windows).
 3. [SCRIPT] Create with the `new-entity` tool (path: `resolve.py --tool
    new-entity`) `<type> "<Title>" --link "[[X]]"`: the script owns the folder, the natural-title
