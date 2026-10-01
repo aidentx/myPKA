@@ -34,3 +34,20 @@ __pycache__/
 # tracked, never shipped; both builders refuse to ship either suffix.
 *.local.md
 *.update
+
+# Member records never belong in the public product repo. The member's vault is
+# a separate private repo (GAP 2, 2026-10-01); this block is the backstop for a
+# stray `git add -A` here. Files already tracked (the shipped seed journals and
+# the .gitkeep files) stay tracked: ignore rules only stop NEW files.
+06 AI Team/AI Team Knowledge/Session Logs/**
+!06 AI Team/AI Team Knowledge/Session Logs/**/
+!06 AI Team/AI Team Knowledge/Session Logs/**/.gitkeep
+06 AI Team/AI Team Knowledge/Tasks/**
+!06 AI Team/AI Team Knowledge/Tasks/**/
+!06 AI Team/AI Team Knowledge/Tasks/**/.gitkeep
+06 AI Team/Agents/*/Journal/*
+!06 AI Team/Agents/*/Journal/_template.md
+!06 AI Team/Agents/*/Journal/.gitkeep
+# Device-local state.
+.obsidian/
+06 AI Team/AI Team Knowledge/.onboarded
