@@ -104,7 +104,7 @@ built before the repository moved from TomSolid to myICOR: check those with
 --signer-workflow.
 """
 
-import argparse, hashlib, importlib.util, json, os, re, shutil, stat, sys, tempfile, unicodedata, zipfile
+import argparse, hashlib, importlib.util, json, os, re, shutil, stat, subprocess, sys, tempfile, unicodedata, zipfile
 from pathlib import Path, PurePosixPath
 
 sys.dont_write_bytecode = True
@@ -191,6 +191,47 @@ def sha(p):
         for chunk in iter(lambda: fh.read(1 << 20), b""):
             h.update(chunk)
     return h.hexdigest()
+
+
+def _baseline_dir(root):
+    """Where the shipped bytes live. A vault that is its own private repo has a
+    HEAD that holds the member's edits, so it names the shipped checkout (the
+    product clone) in `.mypka/baseline`, one path per file, per device and
+    git-ignored with the rest of `.mypka/`. No file: root itself, as before."""
+    try:
+        line = (Path(root) / ".mypka" / "baseline").read_text(encoding="utf-8").splitlines()[0].strip()
+    except (OSError, IndexError):
+        return root
+    p = Path(line).expanduser()
+    return p if p.is_dir() else root
+
+
+def _head_blob_hash(target, rel):
+    """sha256 of the committed bytes at HEAD for rel, or None when the target
+    is not a git checkout (a member's vault is a plain folder, and it has no
+    member-side rebuild so its installed pin is still the shipped bytes) or
+    when rel is not tracked at HEAD. This is the honest shipped baseline that
+    a rebuild cannot move: `build-mypka-manifest.py` recomputes the installed
+    pin from the WORKING tree, so after a rebuild the pin can be the member's
+    uncommitted edit. HEAD is immune to that move. Read only: nothing is
+    written and nothing leaves the target."""
+    try:
+        r = subprocess.run(["git", "-C", str(_baseline_dir(target)), "show", "HEAD:" + rel],
+                           capture_output=True)
+    except OSError:
+        return None
+    if r.returncode != 0:
+        return None
+    return hashlib.sha256(r.stdout).hexdigest()
+
+
+def _uncommitted_vs_head(target, rel, have):
+    """True when the target is a git checkout and the committed bytes at HEAD
+    for rel differ from the live bytes `have`: an uncommitted edit to a shipped
+    file. When there is no git (or rel is not tracked at HEAD) this returns
+    False, so the pre-existing rule-2 behaviour is untouched there."""
+    head = _head_blob_hash(target, rel)
+    return head is not None and head != have
 
 
 class Refused(Exception):
@@ -563,7 +604,21 @@ def plan(args):
         if installed:
             known.add(installed)
         if have in known:
-            rows.append(("update", rel, note))
+            # The installed pin (a working-tree hash after a rebuild) can match
+            # the live bytes of an UNCOMMITTED member edit. In that state `have`
+            # is in `known` but the path is not the shipped baseline, so the
+            # `update` branch would silently destroy the member's bytes with no
+            # `.update` sidecar to reconcile. The moved-pin guard: when the pin
+            # equals the live file AND HEAD still holds different (shipped)
+            # bytes, treat it as an edit, never an overwrite. Rule 2's property
+            # — a shipped file is overwritten only when its bytes are a version
+            # some release shipped — is preserved: HEAD is that shipped version.
+            if _uncommitted_vs_head(target, rel, have):
+                rows.append(("kept+upd", rel, "edited by you, left as is (the installed pin is the "
+                             "working tree, not the shipped bytes); the new version is at %s.update%s"
+                             % (rel, ("; " + note) if note else "")))
+            else:
+                rows.append(("update", rel, note))
         elif installed and installed == want:
             rows.append(("kept", rel, "edited by you, left as is; unchanged upstream, so no .update%s"
                          % (("; " + note) if note else "")))
