@@ -2,8 +2,8 @@
   "schema": 2,
   "name": "myPKA",
   "version": "6.0.4",
-  "built": "2026-09-27T00:29:31Z",
-  "commit": "0e70dda",
+  "built": "2026-10-01T13:47:21Z",
+  "commit": "0b327e8",
   "lab": false,
   "requires": "icor-concepts >=1 <2",
   "files": {
@@ -158,10 +158,10 @@
     "06 AI Team/Agents/Mack/Journal/2026-09-14-first-entry.md": "8a30fa12ea39c84e0e822f19092a412ad0ac6cfa0781054355cbe3551c9b6bdd",
     "06 AI Team/Agents/Mack/Journal/_template.md": "5ce0f51f38f457e5502210fee78e8018ca923576b6e7baee6b63fa68dd2161db",
     "06 AI Team/Agents/Mack/Mack.md": "3701aa00d3eb1589f4692d389173c0805d2999c5a68ae81565b1e01b0db2dea0",
-    "06 AI Team/Agents/Mason/AGENT.md": "25ea594a88d29a373a8b4de10614bc761dcac8da3f7abfd1202926bac167e5bc",
+    "06 AI Team/Agents/Mason/AGENT.md": "e8d5c458b60a2020dddad6a7c904c04689e575c93b88e74de163e2b0ccb831d0",
     "06 AI Team/Agents/Mason/Journal/2026-09-22-mason-hired.md": "b76b4d755edfbbc51f7fce6acedc1fd55a5ea3e01deaae166d766a368171672a",
     "06 AI Team/Agents/Mason/Journal/_template.md": "b9b03be294b858d4da9c952ff4db3bbcc34a1d6d105d7e1ff7a3579c489deed8",
-    "06 AI Team/Agents/Mason/Mason.md": "186897e90591a6130c83307aff8107d50ccdc14174b5d7d01b9db4ea9b47c0be",
+    "06 AI Team/Agents/Mason/Mason.md": "e192d12e02a1d839ea18b4e1f423b18f33599631765beef5c8499dc0c71d29ea",
     "06 AI Team/Agents/Nolan/AGENT.md": "b2ac8d2a01589932bb934dfc0d8505d489798060ccb20d70dcc8b311feb2be03",
     "06 AI Team/Agents/Nolan/Journal/2026-09-14-first-entry.md": "7a362530549cd0e70aeaff033df9b08dcc186cb8d603e0adf524c60b02ba5aba",
     "06 AI Team/Agents/Nolan/Journal/_template.md": "e786c86c0255bfe6853e50340e2ec3f6e5745438d251eafb7c0a21bdf355b6ec",
@@ -314,7 +314,7 @@
   "history": [
     {
       "version": "6.0.4",
-      "date": "2026-09-26",
+      "date": "2026-10-01",
       "removed": [],
       "renamed": [
         {
@@ -893,8 +893,12 @@
       "e2016ca97411257881ca4d11ca39784635ddf5cbc5b1f5b4468fa409a3cfe5d8"
     ],
     "06 AI Team/Agents/Mason/AGENT.md": [
+      "25ea594a88d29a373a8b4de10614bc761dcac8da3f7abfd1202926bac167e5bc",
       "559ec1fa606f01f8f1cfd338ff40e0d4b615345ce216050f9929b6a6a1e0baaa",
       "aca7f7e16e4382e4d90edf2ef2a5ee24704de65e0f4ae3aa809dbeb4b4fa9cad"
+    ],
+    "06 AI Team/Agents/Mason/Mason.md": [
+      "186897e90591a6130c83307aff8107d50ccdc14174b5d7d01b9db4ea9b47c0be"
     ],
     "06 AI Team/Agents/Nolan/AGENT.md": [
       "194227f4f1a6fba54f694f628a0bb76b339d47a74feaf508bac90a603ba73754",
