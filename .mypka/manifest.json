@@ -2,8 +2,8 @@
   "schema": 2,
   "name": "myPKA",
   "version": "6.0.3",
-  "built": "2026-09-26T16:38:10Z",
-  "commit": "e87216d",
+  "built": "2026-10-01T13:47:39Z",
+  "commit": "0bbf4d0",
   "lab": false,
   "requires": "icor-concepts >=1 <2",
   "files": {
@@ -195,7 +195,7 @@
   "repo_only": {
     ".github/SECURITY.md": "19da61ecea4f8f720b002466ff95d38632ff1d0573e7c8e46d4b355445587eda",
     ".github/workflows/release-mypka.yml": "77eade7b2f9af4ef63a502a12dfc2d09799125e1e0c33f4425ba0987ba4c463e",
-    ".gitignore": "7c99ddb7850a7538fa1e195cae6e5089b8cccf422d26891c49f63ee5e25da888",
+    ".gitignore": "a7213a180463e27a97862d95321360aae628543d49171954d008b1fa624d03a2",
     "06 AI Team/AI Team Knowledge/Scripts/build-mypka-manifest.py": "db7d58083a2ddef28590d1381eeabfaa56f809385d36b2f723ea4b5af55736eb",
     "06 AI Team/AI Team Knowledge/Scripts/build-mypka-release.sh": "cbda5197582a235df11d9cbf2ae454efa06f8f787006f92bbc17794974a338e4",
     "06 AI Team/AI Team Knowledge/Scripts/check-disjoint.py": "304d08f4b8167ae66badebe0ecb688e736f3187e7bd49ced66fb77618a7eb124",
@@ -312,6 +312,13 @@
     }
   ],
   "history": [
+    {
+      "version": "6.0.3",
+      "date": "2026-10-01",
+      "removed": [],
+      "renamed": [],
+      "added": []
+    },
     {
       "version": "6.0.3",
       "date": "2026-09-26",
